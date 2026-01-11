@@ -13,13 +13,13 @@ Web application to interact with Codex CLI (OpenAI) through a browser-based term
 - **Encoding**: UTF-8.
 - **Stop semantics**: Windows-friendly termination (no POSIX signals / no `SIGKILL`).
 - **Buffers & History**:
-  - **Ring Buffer**: Le backend maintient un buffer circulaire (ex: 1000 dernières lignes ou 500KB) de l'historique de session courant. Tout nouveau client reçoit immédiatement cet historique à la connexion.
-  - **Backpressure**: La Queue de lecture PTY est de taille fixe. Si elle est pleine, les messages les plus anciens sont supprimés pour éviter l'OOM (Out Of Memory).
+  - **Ring Buffer**: The backend maintains a circular buffer (e.g., last 1000 lines or 500KB) of the current session history. Any new client immediately receives this history upon connection.
+  - **Backpressure**: The PTY read Queue is fixed-size. If full, oldest messages are dropped to prevent OOM (Out Of Memory).
 - **Security**:
-  - **Workspaces Allowlist**: `start` vérifie que le `cwd` demandé est dans une liste définie (`data/workspaces.json`).
-- **Templating Presets**: Support des variables dans les commandes (ex: `{{current_file}}`).
-- **Multi-user**: Non supporté (Conçu pour un usage mono-utilisateur LAN).
-- **Persistence**: `backend/data/presets/global.json` conservé.
+  - **Workspaces Allowlist**: `start` verifies that the requested `cwd` is in a defined list (`data/workspaces.json`).
+- **Templating Presets**: Support variables in commands (e.g., `{{current_file}}`).
+- **Multi-user**: Not supported (Designed for single-user LAN usage).
+- **Persistence**: `backend/data/presets/global.json` preserved.
 - **Static SPA serving**: FastAPI serves the built frontend at `/` (register API/WS routes before static mount).
 - **IDs**: UUID.
 - **Language**: UI and code in English.
@@ -195,10 +195,10 @@ webcodeai/
 │   │   ├── services/
 │   │   │   └── api.ts                 # REST API client
 │   │   │
-│   │   └── types/
-│   │       ├── messages.ts            # TypeScript types for messages
-│   │       └── preset.ts              # TypeScript types for presets
-│   │
+│   │   ├── types/
+│   │   │   ├── messages.ts            # TypeScript types for messages
+│   │   │   └── preset.ts              # TypeScript types for presets
+│   │   │
 │   ├── public/
 │   │   └── index.html
 │   │
@@ -282,7 +282,7 @@ webcodeai/
 #### `app/pty/reader.py` - Output Reader Thread
 ```python
 # Responsibilities:
-# - Dedicated thread reading from the PTY (blocking)
+# - Dedicated thread reading from the PTY (blocking reads)
 # - UTF-8 decode output
 # - Manage Ring Buffer (session history)
 # - Manage Backpressure (Fixed-size Queue with drop-old strategy)
@@ -1306,7 +1306,7 @@ npm run build
 # Build frontend
 cd frontend && npm run build
 
-# Lancer backend (sert aussi frontend)
+# Start backend (also serves frontend)
 cd backend && uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
@@ -1316,7 +1316,7 @@ cd backend && uvicorn app.main:app --host 0.0.0.0 --port 8000
 
 ### Terminal
 - [ ] Backend starts without errors
-- [ ] Frontend build sans erreur
+- [ ] Frontend builds without error
 - [ ] Web UI is reachable on http://<host>:8000 (LAN)
 - [ ] Start button starts Codex
 - [ ] Terminal displays Codex output
@@ -1343,24 +1343,24 @@ cd backend && uvicorn app.main:app --host 0.0.0.0 --port 8000
 
 ## Design System
 
-Les règles de design suivantes doivent être respectées pour maintenir une UI "Premium" et cohérente.
+The following design rules must be respected to maintain a "Premium" and consistent UI.
 
-### Palette de Couleurs (Dark Mode)
+### Color Palette (Dark Mode)
 
-| Token | Valeur Hex | Usage |
+| Token | Hex Value | Usage |
 |-------|------------|-------|
-| `--bg-app` | `#0f172a` | Fond principal (Slate 900) |
-| `--bg-panel` | `#1e293b` | Fond panneaux/modales (Slate 800) |
-| `--bg-term` | `#000000` | Fond Terminal (Strict Black) |
-| `--text-primary` | `#f8fafc` | Texte principal (Slate 50) |
-| `--text-secondary` | `#94a3b8` | Texte secondaire (Slate 400) |
-| `--accent-primary` | `#3b82f6` | Actions principales (Blue 500) |
-| `--accent-hover` | `#2563eb` | Hover actions (Blue 600) |
-| `--accent-danger` | `#ef4444` | Erreurs/Destructif (Red 500) |
-| `--accent-success` | `#22c55e` | Succès/Running (Green 500) |
-| `--border-subtle` | `#334155` | Bordures légères (Slate 700) |
+| `--bg-app` | `#0f172a` | Main Background (Slate 900) |
+| `--bg-panel` | `#1e293b` | Panels/Modals Background (Slate 800) |
+| `--bg-term` | `#000000` | Terminal Background (Strict Black) |
+| `--text-primary` | `#f8fafc` | Primary Text (Slate 50) |
+| `--text-secondary` | `#94a3b8` | Secondary Text (Slate 400) |
+| `--accent-primary` | `#3b82f6` | Primary Actions (Blue 500) |
+| `--accent-hover` | `#2563eb` | Hover Actions (Blue 600) |
+| `--accent-danger` | `#ef4444` | Errors/Destructive (Red 500) |
+| `--accent-success` | `#22c55e` | Success/Running (Green 500) |
+| `--border-subtle` | `#334155` | Subtle Borders (Slate 700) |
 
-### Typographie
+### Typography
 
 - **Font Family**: `Inter`, system-ui, sans-serif
 - **Monospace**: `JetBrains Mono`, `Fira Code`, monospace
@@ -1371,20 +1371,19 @@ Les règles de design suivantes doivent être respectées pour maintenir une UI 
   - `text-lg`: 1.125rem
   - `text-xl`: 1.25rem
 
-### Composants UI
+### UI Components
 
 #### Glassmorphism
-Utiliser des opacités sur les fonds de panneaux flottants avec `backdrop-filter: blur(8px)`.
-Exemple: `background: rgba(30, 41, 59, 0.8);`
+Use opacity on floating panel backgrounds with `backdrop-filter: blur(8px)`.
+Example: `background: rgba(30, 41, 59, 0.8);`
 
 #### Animations
 - **Transitions**: `transition-all duration-200 ease-in-out`
-- **Hover**: Légère élévation ou éclaircissement
-- **Active**: Léger scale down (`transform: scale(0.98)`)
+- **Hover**: Slight elevation or brightening
+- **Active**: Slight scale down (`transform: scale(0.98)`)
 
 #### Spacing
-Utiliser une grille de 4px (Tailwind style).
+Use a 4px grid (Tailwind style).
 - `p-2` (8px), `p-4` (16px), `gap-4` (16px)
 
 ---
-

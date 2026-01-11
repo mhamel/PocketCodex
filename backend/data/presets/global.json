@@ -1,39 +1,66 @@
 {
-    "version": "1.0",
-    "presets": [
-        {
-            "id": "550e8400-e29b-41d4-a716-446655440000",
-            "name": "Analyze & Fix",
-            "description": "Analyze the code and fix all interactions.",
-            "command": "Analyze the code in {{target}} and fix all bugs you find. Explain each change.",
-            "variables": [
-                {
-                    "name": "target",
-                    "description": "Target file or directory",
-                    "default": "."
-                }
-            ],
-            "category": "debug",
-            "shortcut": "Ctrl+1",
-            "createdAt": "2026-01-11T12:00:00Z",
-            "updatedAt": "2026-01-11T12:00:00Z"
-        },
-        {
-            "id": "550e8400-e29b-41d4-a716-446655440001",
-            "name": "Generate Tests",
-            "description": "Generate unit tests",
-            "command": "Generate comprehensive unit tests for {{filename}} using pytest.",
-            "variables": [
-                {
-                    "name": "filename",
-                    "description": "File to test",
-                    "default": ""
-                }
-            ],
-            "category": "testing",
-            "shortcut": "Ctrl+2",
-            "createdAt": "2026-01-11T12:00:00Z",
-            "updatedAt": "2026-01-11T12:00:00Z"
-        }
-    ]
+  "version": "1.0",
+  "presets": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "name": "Fix bugs",
+      "description": "Analyze and fix bugs in the code",
+      "command": "Analyze the code and fix all bugs you find. Explain each change.",
+      "variables": [],
+      "category": "debug",
+      "shortcut": "Ctrl+1"
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440001",
+      "name": "Add tests",
+      "description": "Generate unit tests",
+      "command": "Generate comprehensive unit tests for the current codebase. Use pytest and aim for good coverage.",
+      "variables": [],
+      "category": "testing",
+      "shortcut": "Ctrl+2"
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440002",
+      "name": "Refactor",
+      "description": "Improve code quality",
+      "command": "Refactor the code to improve readability and maintainability. Apply best practices.",
+      "variables": [],
+      "category": "refactor",
+      "shortcut": "Ctrl+3"
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440003",
+      "name": "Document",
+      "description": "Add documentation",
+      "command": "Add relevant docstrings and documentation. Generate or update a README if needed.",
+      "variables": [],
+      "category": "docs"
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440004",
+      "name": "Code review",
+      "description": "Perform a code review",
+      "command": "Perform a thorough code review. Identify security, performance, and style issues. Suggest improvements.",
+      "variables": [],
+      "category": "review"
+    },
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440005",
+      "name": "Explain code",
+      "description": "Explain how the code works",
+      "command": "Explain in detail how this code works. Describe the architecture, patterns used, and data flow.",
+      "variables": [],
+      "category": "general"
+    },
+    {
+      "id": "c3f4304a-e697-4439-b9bc-1dfa4ef2c3b4",
+      "name": "WS Preset Test d3430a8d",
+      "description": "Temporary preset created by test script",
+      "command": "echo preset-d3430a8d",
+      "variables": [],
+      "category": "general",
+      "created_at": "2026-01-11T21:19:27.268229Z",
+      "updated_at": "2026-01-11T21:19:27.268229Z"
+    }
+  ]
 }

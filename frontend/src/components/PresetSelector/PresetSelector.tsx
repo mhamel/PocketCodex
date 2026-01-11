@@ -1,0 +1,71 @@
+import { useMemo, useState } from 'react'
+import type { ChangeEvent } from 'react'
+import type { Preset, PresetScope, PresetsResponse } from '../../types/preset'
+import styles from '../../App.module.css'
+
+type Option = { preset: Preset; scope: PresetScope }
+
+type Props = {
+  data: PresetsResponse
+  disabled?: boolean
+  onExecute: (id: string, scope: PresetScope) => void
+  onManage: () => void
+}
+
+export default function PresetSelector({ data, disabled, onExecute, onManage }: Props) {
+  const options = useMemo<Option[]>(() => {
+    const all: Option[] = []
+    for (const p of data.global) all.push({ preset: p, scope: 'global' })
+    for (const p of data.project) all.push({ preset: p, scope: 'project' })
+    return all
+  }, [data.global, data.project])
+
+  const [selected, setSelected] = useState<string>('')
+
+  const selectedOption = useMemo(() => {
+    return options.find((o: Option) => `${o.scope}:${o.preset.id}` === selected) || null
+  }, [options, selected])
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <select
+        className={styles.input}
+        value={selected}
+        disabled={disabled}
+        onChange={(e: ChangeEvent<HTMLSelectElement>) => setSelected(e.target.value)}
+        style={{ minWidth: 320 }}
+      >
+        <option value="">Select a preset...</option>
+        <optgroup label="Global">
+          {data.global.map((p) => (
+            <option key={p.id} value={`global:${p.id}`}>
+              {p.name}
+            </option>
+          ))}
+        </optgroup>
+        <optgroup label="Project">
+          {data.project.map((p) => (
+            <option key={p.id} value={`project:${p.id}`}>
+              {p.name}
+            </option>
+          ))}
+        </optgroup>
+      </select>
+
+      <button
+        className={`${styles.btn} ${styles.btnPrimary}`}
+        disabled={disabled || !selectedOption}
+        onClick={() => {
+          if (!selectedOption) return
+          onExecute(selectedOption.preset.id, selectedOption.scope)
+        }}
+      >
+        Send
+      </button>
+
+      <button className={styles.btn} onClick={onManage} disabled={disabled}>
+        Manage
+      </button>
+    </div>
+  )
+}
