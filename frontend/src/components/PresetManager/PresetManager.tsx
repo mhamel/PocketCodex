@@ -43,7 +43,7 @@ export default function PresetManager({ open, onClose, data, onCreate, onUpdate,
       style={{
         position: 'fixed',
         inset: 0,
-        background: 'rgba(2, 6, 23, 0.75)',
+        background: 'rgba(0, 0, 0, 0.9)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -147,9 +147,9 @@ export default function PresetManager({ open, onClose, data, onCreate, onUpdate,
                   key={`${scope}:${preset.id}`}
                   style={{
                     border: `1px solid var(--border-subtle)`,
-                    borderRadius: 12,
+                    borderRadius: 0,
                     padding: 12,
-                    background: 'rgba(15, 23, 42, 0.65)'
+                    background: '#000000'
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>

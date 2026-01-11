@@ -111,6 +111,75 @@ Web application to interact with Codex CLI (OpenAI) through a browser-based term
 
 ---
 
+## Run on Windows
+
+### Backend (FastAPI)
+
+From the repository root:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r .\backend\requirements.txt
+```
+
+Start the backend on port 8000 (recommended for dev):
+
+```powershell
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+```
+
+Run on an alternate port (useful to validate changes without touching the main server):
+
+```powershell
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8001 --reload
+```
+
+Notes:
+
+- **Working directory**: run `uvicorn` from `backend/`.
+- **Codex command** is controlled by `backend/.env` via `CODEX_COMMAND`.
+- For local testing (no Codex installed), you can set `CODEX_COMMAND=cmd.exe`.
+
+### Frontend (Vite dev server)
+
+Run the backend first (default proxy targets `http://localhost:8000`). Then:
+
+```powershell
+cd .\frontend
+npm install
+npm run dev
+```
+
+### Frontend build (served by FastAPI)
+
+This produces static files in `backend/static/` (see `frontend/vite.config.ts`).
+
+```powershell
+cd .\frontend
+npm run build
+```
+
+Then start the backend and open:
+
+- `http://127.0.0.1:8000/`
+
+### End-to-end terminal + presets test script
+
+From repo root:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\test_terminal_ws_preset.ps1
+```
+
+Against an alternate backend port:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\test_terminal_ws_preset.ps1 -BaseUrl http://127.0.0.1:8001 -WsUrl ws://127.0.0.1:8001/ws/terminal
+```
+
+---
+
 ## Full File Structure
 
 ```

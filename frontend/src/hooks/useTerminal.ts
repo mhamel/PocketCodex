@@ -11,11 +11,14 @@ export function useTerminal() {
   useEffect(() => {
     const term = new Terminal({
       convertEol: true,
-      fontFamily: 'JetBrains Mono, Fira Code, monospace',
+      fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", "Courier New", monospace',
       fontSize: 13,
       theme: {
         background: '#000000',
-        foreground: '#f8fafc'
+        foreground: '#00ff00',
+        cursor: '#00ff00',
+        cursorAccent: '#000000',
+        selectionBackground: 'rgba(0, 255, 0, 0.25)'
       }
     })
 

@@ -19,9 +19,9 @@ export default function PresetList({ rows, onUpdate, onDelete }: Props) {
           key={`${scope}:${preset.id}`}
           style={{
             border: `1px solid var(--border-subtle)`,
-            borderRadius: 12,
+            borderRadius: 0,
             padding: 12,
-            background: 'rgba(15, 23, 42, 0.65)'
+            background: '#000000'
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>

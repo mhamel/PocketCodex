@@ -1,14 +1,14 @@
 :root {
-  --bg-app: #0f172a;
-  --bg-panel: #1e293b;
+  --bg-app: #000000;
+  --bg-panel: #001400;
   --bg-term: #000000;
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --accent-primary: #3b82f6;
-  --accent-hover: #2563eb;
+  --text-primary: #00ff00;
+  --text-secondary: #00a000;
+  --accent-primary: #00ff00;
+  --accent-hover: #39ff14;
   --accent-danger: #ef4444;
-  --accent-success: #22c55e;
-  --border-subtle: #334155;
+  --accent-success: #00ff00;
+  --border-subtle: rgba(0, 255, 0, 0.25);
 }
 
 * {
@@ -24,7 +24,7 @@ body {
   margin: 0;
   background: var(--bg-app);
   color: var(--text-primary);
-  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
 button,
@@ -35,5 +35,5 @@ textarea {
 }
 
 code {
-  font-family: "JetBrains Mono", "Fira Code", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", "Courier New", monospace;
 }
