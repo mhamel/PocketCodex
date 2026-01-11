@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { ChangeEvent } from 'react'
 import type { Terminal as XTermTerminal } from '@xterm/xterm'
 import './App.css'
 import type { WSMessage } from './types/messages'
@@ -8,6 +7,7 @@ import TerminalView from './components/Terminal/Terminal'
 import ControlPanel from './components/ControlPanel/ControlPanel'
 import PresetSelector from './components/PresetSelector/PresetSelector'
 import PresetManager from './components/PresetManager/PresetManager'
+import ProjectTree from './components/ProjectTree/ProjectTree'
 import { apiPost } from './services/api'
 import { usePresets } from './hooks/usePresets'
 import type { PresetScope } from './types/preset'
@@ -17,6 +17,19 @@ type ProcessStatus = 'running' | 'stopped' | 'error'
 function getErrorMessage(err: unknown): string {
   if (err instanceof Error) return err.message
   return String(err)
+}
+
+function buildCdInput(path: string): string {
+  const trimmed = path.trim()
+  if (!trimmed) return ''
+
+  const drive = /^[a-zA-Z]:/.exec(trimmed)?.[0]
+  const safe = trimmed.split('"').join('\\"')
+
+  let out = ''
+  if (drive) out += `${drive}\r\n`
+  out += `cd "${safe}"\r\n`
+  return out
 }
 
 export default function App() {
@@ -55,6 +68,19 @@ export default function App() {
   }, [])
 
   const { state: wsState, send } = useWebSocket(onWsMessage)
+
+  const onSelectProject = useCallback(
+    (path: string) => {
+      setProjectPath(path)
+      setCwd(path)
+
+      if (processStatus === 'running') {
+        const data = buildCdInput(path)
+        if (data) send({ type: 'input', payload: { data } })
+      }
+    },
+    [processStatus, send]
+  )
 
   const wsBadge = useMemo(() => {
     if (wsState === 'connected') return { text: 'WebSocket: Connected', kind: 'green' as const }
@@ -141,19 +167,9 @@ export default function App() {
 
         <div className="topbar-spacer" />
 
-        <input
-          className="input"
-          placeholder="Project path (optional, for project presets)"
-          value={projectPath}
-          onChange={(e: ChangeEvent<HTMLInputElement>) => setProjectPath(e.target.value)}
-        />
-
-        <input
-          className="input"
-          placeholder="cwd (optional)"
-          value={cwd}
-          onChange={(e: ChangeEvent<HTMLInputElement>) => setCwd(e.target.value)}
-        />
+        <div className="small" style={{ maxWidth: 520, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          Project: {projectPath || '-'}
+        </div>
       </div>
 
       {presetsError ? (
@@ -168,20 +184,29 @@ export default function App() {
         </div>
       ) : null}
 
-      <div className="content">
-        <div className="terminalWrap" id="terminal-host">
-          <TerminalView onData={onData} onResize={onResize} onTerminalReady={onTerminalReady} />
-        </div>
+      <div className="main">
+        <ProjectTree selectedPath={projectPath.trim() ? projectPath.trim() : null} onSelect={onSelectProject} />
 
-        <div className="card footer">
-          <ControlPanel canStart={processStatus !== 'running'} canStop={processStatus === 'running'} onStart={start} onStop={stop} />
+        <div className="content">
+          <div className="terminalWrap" id="terminal-host">
+            <TerminalView onData={onData} onResize={onResize} onTerminalReady={onTerminalReady} />
+          </div>
 
-          <div style={{ display: 'flex', gap: 10 }}>
-            <div className={`badge ${wsBadge.kind === 'green' ? 'badgeGreen' : wsBadge.kind === 'red' ? 'badgeRed' : ''}`}>{wsBadge.text}</div>
-            <div
-              className={`badge ${statusBadge.kind === 'green' ? 'badgeGreen' : statusBadge.kind === 'red' ? 'badgeRed' : ''}`}
-            >
-              {statusBadge.text}
+          <div className="card footer">
+            <ControlPanel
+              canStart={processStatus !== 'running'}
+              canStop={processStatus === 'running'}
+              onStart={start}
+              onStop={stop}
+            />
+
+            <div style={{ display: 'flex', gap: 10 }}>
+              <div className={`badge ${wsBadge.kind === 'green' ? 'badgeGreen' : wsBadge.kind === 'red' ? 'badgeRed' : ''}`}>{wsBadge.text}</div>
+              <div
+                className={`badge ${statusBadge.kind === 'green' ? 'badgeGreen' : statusBadge.kind === 'red' ? 'badgeRed' : ''}`}
+              >
+                {statusBadge.text}
+              </div>
             </div>
           </div>
         </div>

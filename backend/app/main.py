@@ -8,6 +8,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .api.presets import router as presets_router
 from .api.terminal import router as terminal_router
+from .api.workspaces import router as workspaces_router
 from .config import STATIC_DIR
 from .pty.manager import pty_manager
 from .websocket.handler import router as ws_router
@@ -34,6 +35,7 @@ app.add_middleware(
 )
 
 app.include_router(terminal_router)
+app.include_router(workspaces_router)
 app.include_router(presets_router)
 app.include_router(ws_router)
 

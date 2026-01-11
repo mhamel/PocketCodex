@@ -1,0 +1,19 @@
+.terminalWrap .xterm {
+  background: #000000;
+  color: #00ff00;
+}
+
+.terminalWrap .xterm-viewport {
+  background: #000000;
+  scrollbar-color: #00ff00 #000000;
+  scrollbar-width: thin;
+}
+
+.terminalWrap .xterm a {
+  color: #00ff00;
+  text-decoration: underline;
+}
+
+.terminalWrap .xterm .xterm-cursor-layer {
+  opacity: 1;
+}

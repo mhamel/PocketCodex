@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import type { Terminal as XTermTerminal } from '@xterm/xterm'
 import { useTerminal } from '../../hooks/useTerminal'
+import './Terminal.css'
 
 type Props = {
   onData: (data: string) => void

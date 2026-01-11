@@ -42,9 +42,90 @@
   display: grid;
   grid-template-rows: 1fr auto;
   gap: 12px;
+  min-height: 0;
+}
+
+.main {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 12px;
   padding: 12px;
   flex: 1;
   min-height: 0;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.sidebarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.sidebarBody {
+  padding: 8px 0;
+  overflow: auto;
+  min-height: 0;
+}
+
+.sidebarFooter {
+  padding: 10px 12px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.treeRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+}
+
+.treeRow:hover {
+  background: #001400;
+}
+
+.treeRowSelected {
+  background: #002400;
+}
+
+.treeToggle {
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--border-subtle);
+  background: #000000;
+  color: var(--text-primary);
+  border-radius: 0;
+  cursor: pointer;
+}
+
+.treeToggle:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.treeName {
+  flex: 1;
+  text-align: left;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  padding: 0;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.treeMeta {
+  padding: 2px 6px;
+  color: var(--text-secondary);
 }
 
 .terminalWrap {
@@ -107,7 +188,7 @@
 
 .btnDanger {
   background: rgba(239, 68, 68, 0.12);
-  border-color: rgba(239, 68, 68, 0.35);
+  border-color: rgba(239, 68, 68, 0.65);
   color: #fecaca;
 }
 

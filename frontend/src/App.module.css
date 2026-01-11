@@ -28,13 +28,13 @@
 }
 
 .btnDanger {
-  background: rgba(239, 68, 68, 0.12);
-  border-color: rgba(239, 68, 68, 0.35);
-  color: #fecaca;
+  background: var(--accent-primary);
+  border-color: rgba(0, 255, 0, 0.85);
+  color: #000000;
 }
 
 .btnDanger:hover {
-  background: rgba(239, 68, 68, 0.18);
+  background: var(--accent-hover);
 }
 
 .input {

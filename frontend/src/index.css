@@ -1,14 +1,14 @@
 :root {
   --bg-app: #000000;
-  --bg-panel: #001400;
+  --bg-panel: #000000;
   --bg-term: #000000;
   --text-primary: #00ff00;
-  --text-secondary: #00a000;
+  --text-secondary: #00c000;
   --accent-primary: #00ff00;
   --accent-hover: #39ff14;
-  --accent-danger: #ef4444;
+  --accent-danger: #00ff00;
   --accent-success: #00ff00;
-  --border-subtle: rgba(0, 255, 0, 0.25);
+  --border-subtle: rgba(0, 255, 0, 0.45);
 }
 
 * {
@@ -25,6 +25,10 @@ body {
   background: var(--bg-app);
   color: var(--text-primary);
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+::selection {
+  background: rgba(0, 255, 0, 0.25);
 }
 
 button,
