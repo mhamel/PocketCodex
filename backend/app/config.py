@@ -11,6 +11,8 @@ BASE_DIR = Path(__file__).resolve().parents[1]
 DATA_DIR = BASE_DIR / "data"
 STATIC_DIR = BASE_DIR / "static"
 
+VITE_DEV_PORT = int(os.getenv("VITE_DEV_PORT", "0"))
+
 CODEX_COMMAND = os.getenv("CODEX_COMMAND", "codex")
 TERMINAL_COLS = int(os.getenv("TERMINAL_COLS", "80"))
 TERMINAL_ROWS = int(os.getenv("TERMINAL_ROWS", "24"))

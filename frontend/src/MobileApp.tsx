@@ -357,10 +357,17 @@ export default function MobileApp() {
         </div>
       ) : null}
 
-      <div className="mobileContent">
-        <div className="terminalWrap mobileCard mobileTerminalWrap" id="mobile-terminal-host">
-          <TerminalView onData={onData} onResize={onResize} onTerminalReady={onTerminalReady} />
-        </div>
+        <div className="mobileContent">
+          <div className="terminalWrap mobileCard mobileTerminalWrap" id="mobile-terminal-host">
+          <TerminalView
+            onData={onData}
+            onResize={onResize}
+            onTerminalReady={onTerminalReady}
+            interactive={false}
+            autoFocus={false}
+            onInteract={focusComposer}
+          />
+          </div>
 
         {tab === 'projects' ? (
           <div className="mobileOverlayPage mobileCard" role="dialog" aria-modal="true" aria-label="Projects">
@@ -523,6 +530,7 @@ export default function MobileApp() {
               ref={composerRef}
               className="mobileComposerInput"
               placeholder="Type a command..."
+              wrap="soft"
               value={composerValue}
               onChange={(e) => setComposerValue(e.target.value)}
               onKeyDown={(e) => {

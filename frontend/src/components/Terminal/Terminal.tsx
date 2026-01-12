@@ -7,9 +7,12 @@ type Props = {
   onData: (data: string) => void
   onResize: (cols: number, rows: number) => void
   onTerminalReady?: (term: XTermTerminal) => void
+  interactive?: boolean
+  onInteract?: () => void
+  autoFocus?: boolean
 }
 
-export default function TerminalView({ onData, onResize, onTerminalReady }: Props) {
+export default function TerminalView({ onData, onResize, onTerminalReady, interactive = true, onInteract, autoFocus = true }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const { terminalRef, fitAddon } = useTerminal()
 
@@ -25,15 +28,17 @@ export default function TerminalView({ onData, onResize, onTerminalReady }: Prop
     const term = terminalRef.current
     if (!container || !term) return
 
+    term.options.disableStdin = !interactive
+
     term.open(container)
-    focusTerminal()
+    if (interactive && autoFocus) focusTerminal()
 
     if (onTerminalReady) onTerminalReady(term)
 
     fitAddon.fit()
     onResize(term.cols, term.rows)
 
-    const sub = term.onData((d: string) => onData(d))
+    const sub = interactive ? term.onData((d: string) => onData(d)) : null
 
     const resizeObserver = new ResizeObserver(() => {
       fitAddon.fit()
@@ -42,10 +47,23 @@ export default function TerminalView({ onData, onResize, onTerminalReady }: Prop
     resizeObserver.observe(container)
 
     return () => {
-      sub.dispose()
+      sub?.dispose()
       resizeObserver.disconnect()
     }
-  }, [fitAddon, onData, onResize, onTerminalReady, terminalRef])
+  }, [autoFocus, fitAddon, interactive, onData, onResize, onTerminalReady, terminalRef])
 
-  return <div ref={containerRef} style={{ width: '100%', height: '100%' }} onMouseDown={focusTerminal} onTouchStart={focusTerminal} />
+  return (
+    <div
+      ref={containerRef}
+      style={{ width: '100%', height: '100%' }}
+      onMouseDown={() => {
+        if (interactive) focusTerminal()
+        else onInteract?.()
+      }}
+      onTouchStart={() => {
+        if (interactive) focusTerminal()
+        else onInteract?.()
+      }}
+    />
+  )
 }

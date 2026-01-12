@@ -4,6 +4,7 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 from ..models.messages import PongMessage, StatusMessage, StatusPayload
 from ..pty.manager import pty_manager
+from ..pty.sanitize import strip_terminal_identity_responses
 from ..utils.keymapper import map_special_key
 from .manager import ws_manager
 
@@ -16,7 +17,9 @@ async def terminal_ws(websocket: WebSocket) -> None:
 
     try:
         for chunk in pty_manager.history_snapshot():
-            await ws_manager.send_json(websocket, {"type": "output", "payload": {"data": chunk}})
+            cleaned = strip_terminal_identity_responses(chunk)
+            if cleaned:
+                await ws_manager.send_json(websocket, {"type": "output", "payload": {"data": cleaned}})
 
         st = pty_manager.status()
         await ws_manager.send_json(
@@ -33,7 +36,10 @@ async def terminal_ws(websocket: WebSocket) -> None:
             payload = data.get("payload") or {}
 
             if msg_type == "input":
-                pty_manager.write(str(payload.get("data", "")))
+                raw = str(payload.get("data", ""))
+                cleaned = strip_terminal_identity_responses(raw)
+                if cleaned:
+                    pty_manager.write(cleaned)
                 continue
 
             if msg_type == "resize":

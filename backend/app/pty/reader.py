@@ -6,6 +6,7 @@ from queue import Queue
 from typing import Deque, Optional
 
 from ..config import HISTORY_MAX_BYTES, HISTORY_MAX_CHUNKS
+from .sanitize import strip_terminal_identity_responses
 from .session import PTYSession
 
 
@@ -64,6 +65,10 @@ class PTYOutputReader(threading.Thread):
             except Exception:
                 break
 
+            if not chunk:
+                continue
+
+            chunk = strip_terminal_identity_responses(chunk)
             if not chunk:
                 continue
 

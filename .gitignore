@@ -50,4 +50,6 @@ Thumbs.db
 # Optional: Ignore local artifacts
 *.local
 .claude
+.tmp/
+.pytest_cache/
 
