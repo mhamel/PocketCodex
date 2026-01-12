@@ -44,7 +44,7 @@
   display: flex;
   flex-direction: column;
   padding: 10px;
-  padding-bottom: calc(86px + env(safe-area-inset-bottom));
+  padding-bottom: calc(var(--mobile-composer-offset, 0px) + env(safe-area-inset-bottom) + 10px);
   position: relative;
 }
 
@@ -62,12 +62,64 @@
 
 .mobileOverlayPage {
   position: absolute;
-  inset: 10px 10px calc(86px + env(safe-area-inset-bottom)) 10px;
+  inset: 10px 10px calc(var(--mobile-composer-offset, 0px) + env(safe-area-inset-bottom) + 10px) 10px;
   display: flex;
   flex-direction: column;
   gap: 10px;
   padding: 12px;
   overflow: hidden;
+}
+
+.mobileComposer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 45;
+  padding: 10px;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom));
+  background: rgba(0, 0, 0, 0.92);
+  border-top: 1px solid var(--border-subtle);
+  backdrop-filter: blur(10px);
+}
+
+.mobileComposerRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.mobileComposerInput {
+  flex: 1;
+  width: 100%;
+  border: 1px solid var(--border-subtle);
+  border-radius: 18px;
+  background: #000000;
+  color: var(--text-primary);
+  padding: 10px 12px;
+  line-height: 1.35;
+  resize: none;
+  max-height: 140px;
+  overflow: auto;
+}
+
+.mobileComposerInput:disabled {
+  opacity: 0.6;
+}
+
+.mobileComposerSend {
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-active);
+  color: var(--text-primary);
+  padding: 10px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.mobileComposerSend:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .mobileOverlayHeader {
@@ -83,34 +135,7 @@
   overflow: auto;
 }
 
-.mobileBottomNav {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 40;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  padding: 10px;
-  padding-bottom: calc(10px + env(safe-area-inset-bottom));
-  background: rgba(0, 0, 0, 0.92);
-  border-top: 1px solid var(--border-subtle);
-  backdrop-filter: blur(10px);
-}
 
-.mobileNavBtn {
-  border: 1px solid var(--border-subtle);
-  background: #000000;
-  color: var(--text-primary);
-  padding: 10px 12px;
-  border-radius: 999px;
-  cursor: pointer;
-}
-
-.mobileNavBtnActive {
-  background: var(--bg-active);
-}
 
 .mobileSheetOverlay {
   position: fixed;

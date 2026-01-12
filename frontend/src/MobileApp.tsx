@@ -61,10 +61,12 @@ function formatDate(iso: string): string {
 
 export default function MobileApp() {
   const termRef = useRef<XTermTerminal | null>(null)
+  const composerRef = useRef<HTMLTextAreaElement | null>(null)
+  const composerWrapRef = useRef<HTMLDivElement | null>(null)
 
-  const focusTerminal = useCallback(() => {
+  const focusComposer = useCallback(() => {
     try {
-      termRef.current?.focus()
+      composerRef.current?.focus()
     } catch {
     }
   }, [])
@@ -73,6 +75,9 @@ export default function MobileApp() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [quickActionsOpen, setQuickActionsOpen] = useState(false)
   const [managerOpen, setManagerOpen] = useState(false)
+
+  const [composerValue, setComposerValue] = useState('')
+  const [composerOffset, setComposerOffset] = useState(0)
 
   const [processStatus, setProcessStatus] = useState<ProcessStatus>('stopped')
   const [pid, setPid] = useState<number | null>(null)
@@ -121,6 +126,69 @@ export default function MobileApp() {
     [send]
   )
 
+  const canSendComposer = useMemo(() => {
+    return tab === 'terminal' && wsState === 'connected' && processStatus === 'running'
+  }, [processStatus, tab, wsState])
+
+  const sendComposer = useCallback(() => {
+    if (!canSendComposer) return
+
+    const raw = composerValue
+    if (!raw.trim()) return
+
+    const normalized = raw.replace(/\r?\n/g, '\r\n')
+    const payload = normalized.endsWith('\r\n') ? normalized : `${normalized}\r\n`
+    onData(payload)
+    setComposerValue('')
+
+    window.setTimeout(() => {
+      try {
+        composerRef.current?.focus()
+      } catch {
+      }
+    }, 0)
+  }, [canSendComposer, composerValue, onData])
+
+  useEffect(() => {
+    const el = composerRef.current
+    if (!el) return
+    el.style.height = '0px'
+    const next = Math.min(el.scrollHeight, 140)
+    el.style.height = `${next}px`
+  }, [composerValue])
+
+  useEffect(() => {
+    if (tab !== 'terminal') {
+      setComposerOffset(0)
+      return
+    }
+
+    const el = composerWrapRef.current
+    if (!el) return
+
+    const update = () => {
+      try {
+        const rect = el.getBoundingClientRect()
+        const styles = window.getComputedStyle(el)
+        const pb = Number.parseFloat(styles.paddingBottom || '0')
+        const next = Math.max(0, Math.ceil(rect.height - pb))
+        setComposerOffset(next)
+      } catch {
+      }
+    }
+
+    update()
+
+    const ro = new ResizeObserver(() => update())
+    ro.observe(el)
+    window.addEventListener('resize', update)
+
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('resize', update)
+    }
+  }, [tab])
+
   const onResize = useCallback(
     (cols: number, rows: number) => {
       send({ type: 'resize', payload: { cols, rows } })
@@ -164,9 +232,9 @@ export default function MobileApp() {
       }
 
       setMobilePath('terminal')
-      window.setTimeout(() => focusTerminal(), 0)
+      window.setTimeout(() => focusComposer(), 0)
     },
-    [focusTerminal, processStatus, send]
+    [focusComposer, processStatus, send]
   )
 
   const saveCurrentHistorySnapshot = useCallback(async () => {
@@ -202,12 +270,12 @@ export default function MobileApp() {
       }
 
       setMobilePath('terminal')
-      window.setTimeout(() => focusTerminal(), 0)
+      window.setTimeout(() => focusComposer(), 0)
     } catch (e) {
       setTerminalError(getErrorMessage(e))
       setProcessStatus('error')
     }
-  }, [cwd, focusTerminal, saveCurrentHistorySnapshot])
+  }, [cwd, focusComposer, saveCurrentHistorySnapshot])
 
   const quickActions = useMemo<PresetRow[]>(() => {
     const rows: PresetRow[] = []
@@ -249,7 +317,7 @@ export default function MobileApp() {
   }, [chatHistory.items, historySelectedId])
 
   return (
-    <div className="mobileApp">
+    <div className="mobileApp" style={{ ['--mobile-composer-offset' as any]: `${composerOffset}px` }}>
       <div className="mobileTopbar">
         <div className="mobileBrand">WebCodeAI</div>
 
@@ -448,24 +516,31 @@ export default function MobileApp() {
         ) : null}
       </div>
 
-      <div className="mobileBottomNav">
-        <button
-          type="button"
-          className={`mobileNavBtn${tab === 'terminal' ? ' mobileNavBtnActive' : ''}`}
-          onClick={() => {
-            setMobilePath('terminal')
-            window.setTimeout(() => focusTerminal(), 0)
-          }}
-        >
-          Terminal
-        </button>
-        <button type="button" className={`mobileNavBtn${tab === 'projects' ? ' mobileNavBtnActive' : ''}`} onClick={() => setMobilePath('projects')}>
-          Projects
-        </button>
-        <button type="button" className={`mobileNavBtn${tab === 'history' ? ' mobileNavBtnActive' : ''}`} onClick={() => setMobilePath('history')}>
-          History
-        </button>
-      </div>
+      {tab === 'terminal' ? (
+        <div className="mobileComposer" ref={composerWrapRef} role="group" aria-label="Command input">
+          <div className="mobileComposerRow">
+            <textarea
+              ref={composerRef}
+              className="mobileComposerInput"
+              placeholder="Type a command..."
+              value={composerValue}
+              onChange={(e) => setComposerValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key !== 'Enter') return
+                if (e.shiftKey) return
+                if (!canSendComposer) return
+                e.preventDefault()
+                sendComposer()
+              }}
+              rows={1}
+            />
+
+            <button className="mobileComposerSend" type="button" onClick={sendComposer} disabled={!canSendComposer || !composerValue.trim()}>
+              Send
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       {quickActionsOpen ? (
         <div className="mobileSheetOverlay" onMouseDown={() => setQuickActionsOpen(false)} role="dialog" aria-modal="true" aria-label="Quick actions">
@@ -500,7 +575,7 @@ export default function MobileApp() {
                   onClick={async () => {
                     await executePreset(a.id, a.scope)
                     setQuickActionsOpen(false)
-                    window.setTimeout(() => focusTerminal(), 0)
+                    window.setTimeout(() => focusComposer(), 0)
                   }}
                   disabled={wsState !== 'connected' || processStatus !== 'running' || presetsLoading}
                 >
@@ -594,7 +669,7 @@ export default function MobileApp() {
         open={managerOpen}
         onClose={() => {
           setManagerOpen(false)
-          window.setTimeout(() => focusTerminal(), 0)
+          window.setTimeout(() => focusComposer(), 0)
         }}
         data={presets}
         onCreate={createPreset}
