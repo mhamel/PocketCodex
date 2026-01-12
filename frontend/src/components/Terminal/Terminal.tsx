@@ -13,13 +13,20 @@ export default function TerminalView({ onData, onResize, onTerminalReady }: Prop
   const containerRef = useRef<HTMLDivElement | null>(null)
   const { terminalRef, fitAddon } = useTerminal()
 
+  const focusTerminal = () => {
+    try {
+      terminalRef.current?.focus()
+    } catch {
+    }
+  }
+
   useEffect(() => {
     const container = containerRef.current
     const term = terminalRef.current
     if (!container || !term) return
 
     term.open(container)
-    term.focus()
+    focusTerminal()
 
     if (onTerminalReady) onTerminalReady(term)
 
@@ -40,5 +47,5 @@ export default function TerminalView({ onData, onResize, onTerminalReady }: Prop
     }
   }, [fitAddon, onData, onResize, onTerminalReady, terminalRef])
 
-  return <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
+  return <div ref={containerRef} style={{ width: '100%', height: '100%' }} onMouseDown={focusTerminal} onTouchStart={focusTerminal} />
 }

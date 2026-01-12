@@ -7,7 +7,7 @@ function getWsUrl(): string {
   const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws'
 
   if (import.meta.env.DEV) {
-    return `${protocol}://${window.location.hostname}:8000/ws/terminal`
+    return `${protocol}://${window.location.host}/ws/terminal`
   }
 
   return `${protocol}://${window.location.host}/ws/terminal`

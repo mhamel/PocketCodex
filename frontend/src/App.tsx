@@ -37,6 +37,13 @@ function buildCdInput(path: string): string {
 export default function App() {
   const termRef = useRef<XTermTerminal | null>(null)
 
+  const focusTerminal = useCallback(() => {
+    try {
+      termRef.current?.focus()
+    } catch {
+    }
+  }, [])
+
   const [processStatus, setProcessStatus] = useState<ProcessStatus>('stopped')
   const [pid, setPid] = useState<number | null>(null)
   const [terminalError, setTerminalError] = useState<string | null>(null)
@@ -150,11 +157,15 @@ export default function App() {
         termRef.current?.clear()
       } catch {
       }
+
+      window.setTimeout(() => {
+        focusTerminal()
+      }, 0)
     } catch (e) {
       setTerminalError(getErrorMessage(e))
       setProcessStatus('error')
     }
-  }, [cwd, saveCurrentHistorySnapshot])
+  }, [cwd, focusTerminal, saveCurrentHistorySnapshot])
 
   const onData = useCallback(
     (data: string) => {
@@ -191,13 +202,16 @@ export default function App() {
           data={presets}
           disabled={presetsLoading}
           onExecute={(id: string, scope: PresetScope) => executePreset(id, scope)}
-          onManage={() => setManagerOpen(true)}
           onArrowUp={onArrowUp}
           onArrowDown={onArrowDown}
           arrowsDisabled={wsState !== 'connected' || processStatus !== 'running'}
         />
 
         <div className="topbar-spacer" />
+
+        <button className="btn" type="button" onClick={() => setManagerOpen(true)}>
+          Actions
+        </button>
 
         <button className="btn" type="button" onClick={() => setHistoryOpen(true)}>
           History
@@ -248,7 +262,10 @@ export default function App() {
 
       <PresetManager
         open={managerOpen}
-        onClose={() => setManagerOpen(false)}
+        onClose={() => {
+          setManagerOpen(false)
+          window.setTimeout(() => focusTerminal(), 0)
+        }}
         data={presets}
         onCreate={createPreset}
         onUpdate={updatePreset}
@@ -257,7 +274,10 @@ export default function App() {
 
       <ChatHistoryDrawer
         open={historyOpen}
-        onClose={() => setHistoryOpen(false)}
+        onClose={() => {
+          setHistoryOpen(false)
+          window.setTimeout(() => focusTerminal(), 0)
+        }}
         items={chatHistory.items}
         onSaveCurrent={() => void saveCurrentHistorySnapshot()}
         onRename={(id: string, title: string) => void chatHistory.rename(id, title)}

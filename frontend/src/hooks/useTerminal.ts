@@ -12,6 +12,7 @@ export function useTerminal() {
     const term = new Terminal({
       convertEol: true,
       cursorBlink: true,
+      disableStdin: false,
       fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", "Courier New", monospace',
       fontSize: 13,
       theme: {

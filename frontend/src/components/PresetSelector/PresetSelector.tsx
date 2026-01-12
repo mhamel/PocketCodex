@@ -9,13 +9,12 @@ type Props = {
   data: PresetsResponse
   disabled?: boolean
   onExecute: (id: string, scope: PresetScope) => void
-  onManage: () => void
   onArrowUp?: () => void
   onArrowDown?: () => void
   arrowsDisabled?: boolean
 }
 
-export default function PresetSelector({ data, disabled, onExecute, onManage, onArrowUp, onArrowDown, arrowsDisabled }: Props) {
+export default function PresetSelector({ data, disabled, onExecute, onArrowUp, onArrowDown, arrowsDisabled }: Props) {
   const options = useMemo<Option[]>(() => {
     const all: Option[] = []
     for (const p of data.global) all.push({ preset: p, scope: 'global' })
@@ -38,7 +37,7 @@ export default function PresetSelector({ data, disabled, onExecute, onManage, on
         onChange={(e: ChangeEvent<HTMLSelectElement>) => setSelected(e.target.value)}
         style={{ minWidth: 240, width: 'min(320px, 70vw)', maxWidth: '100%' }}
       >
-        <option value="">Select a preset...</option>
+        <option value="">Quick actions...</option>
         <optgroup label="Global">
           {data.global.map((p) => (
             <option key={p.id} value={`global:${p.id}`}>
@@ -64,10 +63,6 @@ export default function PresetSelector({ data, disabled, onExecute, onManage, on
         }}
       >
         Send
-      </button>
-
-      <button className={styles.btn} onClick={onManage} disabled={disabled}>
-        Manage
       </button>
 
       <button className={styles.btn} onClick={onArrowUp} disabled={disabled || arrowsDisabled || !onArrowUp}>

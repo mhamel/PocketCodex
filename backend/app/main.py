@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from .api.history import router as history_router
@@ -40,5 +41,12 @@ app.include_router(workspaces_router)
 app.include_router(presets_router)
 app.include_router(history_router)
 app.include_router(ws_router)
+
+
+@app.get("/mobile")
+@app.get("/mobile/")
+@app.get("/mobile/{path:path}")
+async def mobile_spa_fallback(path: str = ""):
+    return FileResponse(str(STATIC_DIR / "index.html"))
 
 app.mount("/", StaticFiles(directory=str(STATIC_DIR), html=True), name="static")

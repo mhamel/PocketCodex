@@ -1,0 +1,44 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Dev: Backend (FastAPI :8000)",
+      "type": "shell",
+      "command": "python -m uvicorn app.main:app --reload --port 8000",
+      "options": {
+        "cwd": "${workspaceFolder}/backend"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "dev",
+        "clear": false
+      }
+    },
+    {
+      "label": "Dev: Frontend (Vite :9999)",
+      "type": "shell",
+      "command": "npm --prefix frontend run dev -- --port 9999 --strictPort",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "dev",
+        "clear": false
+      }
+    },
+    {
+      "label": "Dev: Full Stack (9999 + 8000)",
+      "dependsOn": [
+        "Dev: Backend (FastAPI :8000)",
+        "Dev: Frontend (Vite :9999)"
+      ],
+      "dependsOrder": "parallel",
+      "problemMatcher": []
+    }
+  ]
+}

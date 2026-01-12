@@ -115,7 +115,7 @@ class ChatHistoryService:
         chunks = pty_manager.history_snapshot()
         transcript = "".join(chunks)
         if not transcript.strip():
-            raise ValueError("No terminal history to save")
+            transcript = ""
 
         if len(transcript) > MAX_TRANSCRIPT_CHARS:
             transcript = transcript[-MAX_TRANSCRIPT_CHARS:]
