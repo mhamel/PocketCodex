@@ -4,7 +4,15 @@
       "Bash(dir:*)",
       "WebSearch",
       "WebFetch(domain:github.com)",
-      "WebFetch(domain:devblogs.microsoft.com)"
+      "WebFetch(domain:devblogs.microsoft.com)",
+      "Bash(npx tsc:*)",
+      "Bash(del \"D:\\\\DEVS\\\\WEBCODEAI\\\\frontend\\\\src\\\\hooks\\\\useSlashCommands.ts\")",
+      "Bash(del \"D:\\\\DEVS\\\\WEBCODEAI\\\\frontend\\\\src\\\\types\\\\slashCommands.ts\")",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(npm install:*)",
+      "Bash(npm view:*)",
+      "Bash(npm run build:*)"
     ]
   }
 }

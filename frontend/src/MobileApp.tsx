@@ -1,108 +1,57 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import type { Terminal as XTermTerminal } from '@xterm/xterm'
 import './Mobile.css'
 import './App.css'
 import type { WSMessage } from './types/messages'
 import { useWebSocket } from './hooks/useWebSocket'
-import TerminalView from './components/Terminal/Terminal'
-import PresetManager from './components/PresetManager/PresetManager'
+import TerminalView, { type TerminalHandle } from './components/Terminal/Terminal'
 import { apiGet, apiPost } from './services/api'
-import { usePresets } from './hooks/usePresets'
-import { useChatHistory } from './hooks/useChatHistory'
-import type { PresetScope } from './types/preset'
 import type { WorkspaceListResponse, WorkspaceNode } from './types/workspace'
-import type { ChatHistoryItem } from './types/chatHistory'
+import Login from './components/Login/Login'
 
 type ProcessStatus = 'running' | 'stopped' | 'error'
 
-type MobileTab = 'terminal' | 'projects' | 'history'
-
-type PresetRow = { id: string; scope: PresetScope; name: string; description?: string | null; category?: string }
+const AUTH_TOKEN_KEY = 'webcodeai_token'
 
 function getErrorMessage(err: unknown): string {
   if (err instanceof Error) return err.message
   return String(err)
 }
 
-function buildCdInput(path: string): string {
-  const trimmed = path.trim()
-  if (!trimmed) return ''
-
-  const drive = /^[a-zA-Z]:/.exec(trimmed)?.[0]
-  const safe = trimmed.split('"').join('\\"')
-
-  let out = ''
-  if (drive) out += `${drive}\r\n`
-  out += `cd "${safe}"\r\n`
-  return out
-}
-
-function parseTabFromPath(pathname: string): MobileTab {
-  const p = pathname.toLowerCase()
-  if (p.startsWith('/mobile/projects')) return 'projects'
-  if (p.startsWith('/mobile/history')) return 'history'
-  return 'terminal'
-}
-
-function setMobilePath(tab: MobileTab): void {
-  const next = tab === 'terminal' ? '/mobile/' : `/mobile/${tab}`
-  if (window.location.pathname === next) return
-  window.history.pushState({}, '', next)
-  window.dispatchEvent(new PopStateEvent('popstate'))
-}
-
-function formatDate(iso: string): string {
-  try {
-    return new Date(iso).toLocaleString()
-  } catch {
-    return iso
-  }
-}
-
 export default function MobileApp() {
-  const termRef = useRef<XTermTerminal | null>(null)
-  const composerRef = useRef<HTMLTextAreaElement | null>(null)
-  const composerWrapRef = useRef<HTMLDivElement | null>(null)
+  const [authToken, setAuthToken] = useState<string | null>(() => {
+    return localStorage.getItem(AUTH_TOKEN_KEY)
+  })
 
-  const focusComposer = useCallback(() => {
-    try {
-      composerRef.current?.focus()
-    } catch {
-    }
+  const handleLoginSuccess = useCallback((token: string) => {
+    localStorage.setItem(AUTH_TOKEN_KEY, token)
+    setAuthToken(token)
   }, [])
 
-  const [tab, setTab] = useState<MobileTab>(() => parseTabFromPath(window.location.pathname))
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [quickActionsOpen, setQuickActionsOpen] = useState(false)
-  const [managerOpen, setManagerOpen] = useState(false)
+  const handleLogout = useCallback(() => {
+    localStorage.removeItem(AUTH_TOKEN_KEY)
+    setAuthToken(null)
+  }, [])
 
-  const [composerValue, setComposerValue] = useState('')
-  const [composerOffset, setComposerOffset] = useState(0)
+  if (!authToken) {
+    return <Login onLoginSuccess={handleLoginSuccess} />
+  }
+
+  return <MainApp onLogout={handleLogout} />
+}
+
+function MainApp({ onLogout }: { onLogout: () => void }) {
+  const termRef = useRef<XTermTerminal | null>(null)
+  const terminalHandleRef = useRef<TerminalHandle | null>(null)
+  const restartInFlightRef = useRef(false)
+
+  const [projectPickerOpen, setProjectPickerOpen] = useState(false)
 
   const [processStatus, setProcessStatus] = useState<ProcessStatus>('stopped')
   const [pid, setPid] = useState<number | null>(null)
   const [terminalError, setTerminalError] = useState<string | null>(null)
 
   const [projectPath, setProjectPath] = useState<string>('')
-  const [cwd, setCwd] = useState<string>('')
-
-  const chatHistory = useChatHistory(projectPath.trim() ? projectPath.trim() : null)
-
-  const {
-    data: presets,
-    loading: presetsLoading,
-    error: presetsError,
-    createPreset,
-    updatePreset,
-    deletePreset,
-    executePreset
-  } = usePresets(projectPath.trim() ? projectPath.trim() : null)
-
-  useEffect(() => {
-    const onPop = () => setTab(parseTabFromPath(window.location.pathname))
-    window.addEventListener('popstate', onPop)
-    return () => window.removeEventListener('popstate', onPop)
-  }, [])
 
   const onWsMessage = useCallback(
     (msg: WSMessage) => {
@@ -117,7 +66,7 @@ export default function MobileApp() {
     []
   )
 
-  const { state: wsState, send } = useWebSocket(onWsMessage)
+  const { send } = useWebSocket(onWsMessage)
 
   const onData = useCallback(
     (data: string) => {
@@ -125,69 +74,6 @@ export default function MobileApp() {
     },
     [send]
   )
-
-  const canSendComposer = useMemo(() => {
-    return tab === 'terminal' && wsState === 'connected' && processStatus === 'running'
-  }, [processStatus, tab, wsState])
-
-  const sendComposer = useCallback(() => {
-    if (!canSendComposer) return
-
-    const raw = composerValue
-    if (!raw.trim()) return
-
-    const normalized = raw.replace(/\r?\n/g, '\r\n')
-    const payload = normalized.endsWith('\r\n') ? normalized : `${normalized}\r\n`
-    onData(payload)
-    setComposerValue('')
-
-    window.setTimeout(() => {
-      try {
-        composerRef.current?.focus()
-      } catch {
-      }
-    }, 0)
-  }, [canSendComposer, composerValue, onData])
-
-  useEffect(() => {
-    const el = composerRef.current
-    if (!el) return
-    el.style.height = '0px'
-    const next = Math.min(el.scrollHeight, 140)
-    el.style.height = `${next}px`
-  }, [composerValue])
-
-  useEffect(() => {
-    if (tab !== 'terminal') {
-      setComposerOffset(0)
-      return
-    }
-
-    const el = composerWrapRef.current
-    if (!el) return
-
-    const update = () => {
-      try {
-        const rect = el.getBoundingClientRect()
-        const styles = window.getComputedStyle(el)
-        const pb = Number.parseFloat(styles.paddingBottom || '0')
-        const next = Math.max(0, Math.ceil(rect.height - pb))
-        setComposerOffset(next)
-      } catch {
-      }
-    }
-
-    update()
-
-    const ro = new ResizeObserver(() => update())
-    ro.observe(el)
-    window.addEventListener('resize', update)
-
-    return () => {
-      ro.disconnect()
-      window.removeEventListener('resize', update)
-    }
-  }, [tab])
 
   const onResize = useCallback(
     (cols: number, rows: number) => {
@@ -221,127 +107,129 @@ export default function MobileApp() {
     void refreshWorkspaces()
   }, [refreshWorkspaces])
 
-  const onSelectProject = useCallback(
-    (path: string) => {
-      setProjectPath(path)
-      setCwd(path)
-
-      if (processStatus === 'running') {
-        const data = buildCdInput(path)
-        if (data) send({ type: 'input', payload: { data } })
+  // Fetch current terminal status on mount to get the current project
+  useEffect(() => {
+    const fetchStatus = async () => {
+      try {
+        const status = await apiGet<{ status: string; pid?: number; cwd?: string | null }>('/api/terminal/status')
+        if (status.cwd) {
+          setProjectPath(status.cwd)
+        }
+        if (status.status === 'running' || status.status === 'stopped') {
+          setProcessStatus(status.status)
+        }
+        if (status.pid) {
+          setPid(status.pid)
+        }
+      } catch {
+        // Ignore errors on initial fetch
       }
+    }
+    void fetchStatus()
+  }, [])
 
-      setMobilePath('terminal')
-      window.setTimeout(() => focusComposer(), 0)
+  const onSelectProject = useCallback(
+    async (path: string) => {
+      setProjectPath(path)
+      setProjectPickerOpen(false)
+
+      if (restartInFlightRef.current) return
+      restartInFlightRef.current = true
+      setTerminalError(null)
+
+      try {
+        termRef.current?.reset()
+      } catch {}
+
+      try {
+        const body = { cwd: path }
+        const info = await apiPost<{ status?: ProcessStatus; pid?: number | null }>('/api/terminal/restart', body)
+        if (info?.status) setProcessStatus(info.status)
+        if ('pid' in (info || {})) setPid(info?.pid ?? null)
+      } catch (e) {
+        setTerminalError(getErrorMessage(e))
+        setProcessStatus('error')
+      } finally {
+        restartInFlightRef.current = false
+      }
     },
-    [focusComposer, processStatus, send]
+    []
   )
 
-  const saveCurrentHistorySnapshot = useCallback(async () => {
-    const project = projectPath.trim() ? projectPath.trim() : null
-    const leaf = project ? project.replace(/\\+$/g, '').split(/\\|\//).filter(Boolean).slice(-1)[0] : null
-    const title = leaf ? `Session (${leaf})` : 'Session'
+  const projectName = useMemo(() => {
+    if (!projectPath.trim()) return null
+    return projectPath.replace(/\\+$/g, '').split(/\\|\//).filter(Boolean).slice(-1)[0] || null
+  }, [projectPath])
 
-    try {
-      await chatHistory.saveSnapshot(title)
-    } catch (e) {
-      const msg = getErrorMessage(e)
-      if (!msg.toLowerCase().includes('no terminal history')) {
-        setTerminalError(msg)
-      }
-    }
-  }, [chatHistory, projectPath])
+  const sendArrowUp = useCallback(() => {
+    send({ type: 'input', payload: { data: '\x1b[A' } })
+  }, [send])
 
-  const restart = useCallback(async () => {
-    const body: { cwd?: string } = {}
-    if (cwd.trim()) body.cwd = cwd.trim()
-    setTerminalError(null)
+  const sendArrowDown = useCallback(() => {
+    send({ type: 'input', payload: { data: '\x1b[B' } })
+  }, [send])
 
-    try {
-      await saveCurrentHistorySnapshot()
-    } catch {
-    }
+  const sendEnter = useCallback(() => {
+    send({ type: 'input', payload: { data: '\r' } })
+  }, [send])
 
-    try {
-      await apiPost('/api/terminal/restart', body)
-      try {
-        termRef.current?.clear()
-      } catch {
-      }
+  const sendEscape = useCallback(() => {
+    send({ type: 'input', payload: { data: '\x1b' } })
+  }, [send])
 
-      setMobilePath('terminal')
-      window.setTimeout(() => focusComposer(), 0)
-    } catch (e) {
-      setTerminalError(getErrorMessage(e))
-      setProcessStatus('error')
-    }
-  }, [cwd, focusComposer, saveCurrentHistorySnapshot])
+  const handleRefresh = useCallback(() => {
+    terminalHandleRef.current?.refresh(onData)
+  }, [onData])
 
-  const quickActions = useMemo<PresetRow[]>(() => {
-    const rows: PresetRow[] = []
-    for (const p of presets.global) rows.push({ id: p.id, scope: 'global', name: p.name, description: p.description, category: p.category })
-    for (const p of presets.project) rows.push({ id: p.id, scope: 'project', name: p.name, description: p.description, category: p.category })
-    return rows
-  }, [presets.global, presets.project])
-
-  const [qaQuery, setQaQuery] = useState('')
-  const filteredQuickActions = useMemo(() => {
-    const q = qaQuery.trim().toLowerCase()
-    if (!q) return quickActions
-    return quickActions.filter((x) => {
-      const hay = `${x.name}\n${x.description ?? ''}\n${x.category ?? ''}\n${x.scope}`.toLowerCase()
-      return hay.includes(q)
-    })
-  }, [qaQuery, quickActions])
-
-  const [historyQuery, setHistoryQuery] = useState('')
-  const [historySelectedId, setHistorySelectedId] = useState<string | null>(null)
+  const [keyboardOffset, setKeyboardOffset] = useState(0)
 
   useEffect(() => {
-    if (tab !== 'history') return
-    if (!historySelectedId && chatHistory.items.length > 0) setHistorySelectedId(chatHistory.items[0].id)
-  }, [chatHistory.items, historySelectedId, tab])
+    const vv = window.visualViewport
+    if (!vv) return
 
-  const filteredHistory = useMemo(() => {
-    const q = historyQuery.trim().toLowerCase()
-    if (!q) return chatHistory.items
-    return chatHistory.items.filter((x: ChatHistoryItem) => {
-      const hay = `${x.title}\n${x.project_path ?? ''}\n${x.transcript}`.toLowerCase()
-      return hay.includes(q)
-    })
-  }, [chatHistory.items, historyQuery])
+    const updateOffset = () => {
+      const offset = window.innerHeight - vv.height
+      setKeyboardOffset(offset > 0 ? offset : 0)
+    }
 
-  const selectedHistory = useMemo(() => {
-    if (!historySelectedId) return null
-    return chatHistory.items.find((x) => x.id === historySelectedId) || null
-  }, [chatHistory.items, historySelectedId])
+    updateOffset()
+    vv.addEventListener('resize', updateOffset)
+    vv.addEventListener('scroll', updateOffset)
+
+    return () => {
+      vv.removeEventListener('resize', updateOffset)
+      vv.removeEventListener('scroll', updateOffset)
+    }
+  }, [])
+
+  const mobileContentStyle: CSSProperties | undefined = keyboardOffset
+    ? { paddingBottom: `calc(env(safe-area-inset-bottom) + 72px + ${keyboardOffset}px)` }
+    : undefined
 
   return (
-    <div className="mobileApp" style={{ ['--mobile-composer-offset' as any]: `${composerOffset}px` }}>
+    <div className="mobileApp">
       <div className="mobileTopbar">
-        <div className="mobileBrand">WebCodeAI</div>
-
         <button
           type="button"
-          className="mobileSearchBtn"
+          className="mobileProjectBtn"
           onClick={() => {
-            setQuickActionsOpen(true)
-            setMenuOpen(false)
+            setProjectPickerOpen(true)
+            void refreshWorkspaces()
           }}
         >
-          <span>Quick actions</span>
-          <span className="mobileSheetItemSecondary">Search</span>
+          {projectName || 'Select project'}
         </button>
-
         <button
           type="button"
-          className="btn"
-          onClick={() => {
-            setMenuOpen(true)
-            setQuickActionsOpen(false)
-          }}
+          className="mobileLogoutBtn"
+          onClick={onLogout}
+          title="Logout"
         >
-          Menu
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
         </button>
       </div>
 
@@ -351,39 +239,51 @@ export default function MobileApp() {
         </div>
       ) : null}
 
-      {presetsError ? (
-        <div style={{ padding: '0 12px' }}>
-          <div className="small">Presets error: {presetsError}</div>
+      <div className="mobileContent" style={mobileContentStyle}>
+        <div className="terminalWrap mobileCard mobileTerminalWrap" id="mobile-terminal-host">
+          <TerminalView ref={terminalHandleRef} onData={onData} onResize={onResize} onTerminalReady={onTerminalReady} autoFocus={true} />
         </div>
-      ) : null}
+      </div>
 
-        <div className="mobileContent">
-          <div className="terminalWrap mobileCard mobileTerminalWrap" id="mobile-terminal-host">
-          <TerminalView
-            onData={onData}
-            onResize={onResize}
-            onTerminalReady={onTerminalReady}
-            interactive={false}
-            autoFocus={false}
-            onInteract={focusComposer}
-          />
-          </div>
+      <div className="mobileNavArrows" style={{ bottom: keyboardOffset }}>
+        <button type="button" className="mobileNavArrowBtn" onClick={handleRefresh} aria-label="Refresh">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="23 4 23 10 17 10"/>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+          </svg>
+        </button>
+        <button type="button" className="mobileNavArrowBtn" onClick={sendEscape} aria-label="Escape">
+          <span style={{ fontSize: 12, fontWeight: 600 }}>ESC</span>
+        </button>
+        <button type="button" className="mobileNavArrowBtn" onClick={sendArrowUp} aria-label="Arrow up">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M18 15l-6-6-6 6"/>
+          </svg>
+        </button>
+        <button type="button" className="mobileNavArrowBtn" onClick={sendArrowDown} aria-label="Arrow down">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M6 9l6 6 6-6"/>
+          </svg>
+        </button>
+        <button type="button" className="mobileNavArrowBtn" onClick={sendEnter} aria-label="Enter">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 10l-5 5 5 5"/>
+            <path d="M20 4v7a4 4 0 0 1-4 4H4"/>
+          </svg>
+        </button>
+      </div>
 
-        {tab === 'projects' ? (
-          <div className="mobileOverlayPage mobileCard" role="dialog" aria-modal="true" aria-label="Projects">
-            <div className="mobileOverlayHeader">
-              <div style={{ fontWeight: 600 }}>Projects</div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button className="btn" type="button" onClick={() => void refreshWorkspaces()} disabled={workspacesLoading}>
-                  Refresh
-                </button>
-                <button className="btn" type="button" onClick={() => setMobilePath('terminal')}>
-                  Close
-                </button>
-              </div>
+      {projectPickerOpen ? (
+        <div className="mobileSheetOverlay" onMouseDown={() => setProjectPickerOpen(false)} role="dialog" aria-modal="true" aria-label="Select project">
+          <div className="mobileSheet" onMouseDown={(e) => e.stopPropagation()}>
+            <div className="mobileSheetHeader">
+              <div className="mobileSheetTitle">Select project</div>
+              <button className="btn" type="button" onClick={() => setProjectPickerOpen(false)}>
+                Close
+              </button>
             </div>
 
-            <div className="mobileOverlayBody">
+            <div className="mobileSheetBody">
               {workspacesLoading ? <div className="small">Loading...</div> : null}
               {workspacesError ? <div className="small">Error: {workspacesError}</div> : null}
 
@@ -405,285 +305,10 @@ export default function MobileApp() {
                   )
                 })}
               </div>
-
-              <div className="small" style={{ marginTop: 10 }}>
-                Selected: {projectPath || '-'}
-              </div>
-            </div>
-          </div>
-        ) : null}
-
-        {tab === 'history' ? (
-          <div className="mobileOverlayPage mobileCard" role="dialog" aria-modal="true" aria-label="History">
-            <div className="mobileOverlayHeader">
-              <div style={{ fontWeight: 600 }}>History</div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button className="btn" type="button" onClick={() => void saveCurrentHistorySnapshot()}>
-                  Save
-                </button>
-                <button className="btn" type="button" onClick={() => setMobilePath('terminal')}>
-                  Close
-                </button>
-              </div>
-            </div>
-
-            <div className="mobileOverlayBody" style={{ display: 'grid', gap: 10 }}>
-              <input className="input" placeholder="Search..." value={historyQuery} onChange={(e) => setHistoryQuery(e.target.value)} />
-
-              <div className="mobileList">
-                {filteredHistory.length === 0 ? <div className="small">No history</div> : null}
-                {filteredHistory.map((it) => {
-                  const active = historySelectedId === it.id
-                  const subtitle = it.project_path ? it.project_path : 'No project'
-                  return (
-                    <button
-                      key={it.id}
-                      type="button"
-                      className="mobileListRow"
-                      onClick={() => setHistorySelectedId(it.id)}
-                      style={{ background: active ? 'var(--bg-active)' : '#000000' }}
-                      title={subtitle}
-                    >
-                      <div className="mobileListRowTitle">{it.title}</div>
-                      <div className="mobileListRowMeta">{subtitle}</div>
-                      <div className="mobileListRowMeta">{formatDate(it.created_at)}</div>
-                    </button>
-                  )
-                })}
-              </div>
-
-              {selectedHistory ? (
-                <div className="mobileCard" style={{ padding: 12, display: 'grid', gap: 10 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{selectedHistory.title}</div>
-                      <div className="small">{selectedHistory.project_path ? selectedHistory.project_path : 'No project'}</div>
-                    </div>
-
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      <button
-                        className="btn"
-                        type="button"
-                        onClick={() => {
-                          const nextTitle = window.prompt('Rename', selectedHistory.title)
-                          if (!nextTitle) return
-                          chatHistory.rename(selectedHistory.id, nextTitle)
-                        }}
-                      >
-                        Rename
-                      </button>
-                      <button
-                        className="btn"
-                        type="button"
-                        onClick={async () => {
-                          try {
-                            await navigator.clipboard.writeText(selectedHistory.transcript)
-                          } catch {
-                            window.prompt('Copy transcript', selectedHistory.transcript)
-                          }
-                        }}
-                      >
-                        Copy
-                      </button>
-                    </div>
-                  </div>
-
-                  <pre className="mobileTranscript">{selectedHistory.transcript}</pre>
-
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <button
-                      className="btn"
-                      type="button"
-                      onClick={() => {
-                        const ok = window.confirm('Delete this history item?')
-                        if (!ok) return
-                        chatHistory.remove(selectedHistory.id)
-                        setHistorySelectedId(null)
-                      }}
-                    >
-                      Delete
-                    </button>
-                    <button
-                      className="btn"
-                      type="button"
-                      onClick={() => {
-                        const ok = window.confirm('Clear all history items?')
-                        if (!ok) return
-                        chatHistory.clearAll()
-                        setHistorySelectedId(null)
-                      }}
-                    >
-                      Clear all
-                    </button>
-                  </div>
-                </div>
-              ) : null}
-            </div>
-          </div>
-        ) : null}
-      </div>
-
-      {tab === 'terminal' ? (
-        <div className="mobileComposer" ref={composerWrapRef} role="group" aria-label="Command input">
-          <div className="mobileComposerRow">
-            <textarea
-              ref={composerRef}
-              className="mobileComposerInput"
-              placeholder="Type a command..."
-              wrap="soft"
-              value={composerValue}
-              onChange={(e) => setComposerValue(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key !== 'Enter') return
-                if (e.shiftKey) return
-                if (!canSendComposer) return
-                e.preventDefault()
-                sendComposer()
-              }}
-              rows={1}
-            />
-
-            <button className="mobileComposerSend" type="button" onClick={sendComposer} disabled={!canSendComposer || !composerValue.trim()}>
-              Send
-            </button>
-          </div>
-        </div>
-      ) : null}
-
-      {quickActionsOpen ? (
-        <div className="mobileSheetOverlay" onMouseDown={() => setQuickActionsOpen(false)} role="dialog" aria-modal="true" aria-label="Quick actions">
-          <div className="mobileSheet" onMouseDown={(e) => e.stopPropagation()}>
-            <div className="mobileSheetHeader">
-              <div className="mobileSheetTitle">Quick actions</div>
-              <button className="btn" type="button" onClick={() => setQuickActionsOpen(false)}>
-                Close
-              </button>
-            </div>
-
-            <div className="mobileList">
-              <input className="input" placeholder="Search actions..." value={qaQuery} onChange={(e) => setQaQuery(e.target.value)} />
-
-              <button
-                type="button"
-                className="mobileSheetItem"
-                onClick={() => {
-                  setQuickActionsOpen(false)
-                  setManagerOpen(true)
-                }}
-                disabled={presetsLoading}
-              >
-                Manage presets
-              </button>
-
-              {filteredQuickActions.map((a) => (
-                <button
-                  key={`${a.scope}:${a.id}`}
-                  type="button"
-                  className="mobileSheetItem"
-                  onClick={async () => {
-                    await executePreset(a.id, a.scope)
-                    setQuickActionsOpen(false)
-                    window.setTimeout(() => focusComposer(), 0)
-                  }}
-                  disabled={wsState !== 'connected' || processStatus !== 'running' || presetsLoading}
-                >
-                  <div style={{ fontWeight: 600 }}>{a.name}</div>
-                  <div className="mobileSheetItemSecondary">{a.scope}</div>
-                </button>
-              ))}
-
-              {filteredQuickActions.length === 0 ? <div className="small">No actions</div> : null}
             </div>
           </div>
         </div>
       ) : null}
-
-      {menuOpen ? (
-        <div className="mobileSheetOverlay" onMouseDown={() => setMenuOpen(false)} role="dialog" aria-modal="true" aria-label="Menu">
-          <div className="mobileSheet" onMouseDown={(e) => e.stopPropagation()}>
-            <div className="mobileSheetHeader">
-              <div className="mobileSheetTitle">Menu</div>
-              <button className="btn" type="button" onClick={() => setMenuOpen(false)}>
-                Close
-              </button>
-            </div>
-
-            <div className="mobileList">
-              <div className="small">WebSocket: {wsState}</div>
-              <div className="small">Process: {processStatus}{pid ? ` (PID ${pid})` : ''}</div>
-              <div className="small">Project: {projectPath || '-'}</div>
-
-              <button
-                type="button"
-                className="mobileSheetItem"
-                onClick={async () => {
-                  setMenuOpen(false)
-                  await restart()
-                }}
-                disabled={wsState !== 'connected'}
-              >
-                Restart
-              </button>
-
-              <button
-                type="button"
-                className="mobileSheetItem"
-                onClick={async () => {
-                  setMenuOpen(false)
-                  await saveCurrentHistorySnapshot()
-                }}
-              >
-                Save current to history
-              </button>
-
-              <button
-                type="button"
-                className="mobileSheetItem"
-                onClick={() => {
-                  setMenuOpen(false)
-                  setMobilePath('history')
-                }}
-              >
-                History
-              </button>
-
-              <button
-                type="button"
-                className="mobileSheetItem"
-                onClick={() => {
-                  setMenuOpen(false)
-                  setMobilePath('projects')
-                }}
-              >
-                Projects
-              </button>
-
-              <button
-                type="button"
-                className="mobileSheetItem"
-                onClick={() => {
-                  setMenuOpen(false)
-                  setManagerOpen(true)
-                }}
-              >
-                Actions
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      <PresetManager
-        open={managerOpen}
-        onClose={() => {
-          setManagerOpen(false)
-          window.setTimeout(() => focusComposer(), 0)
-        }}
-        data={presets}
-        onCreate={createPreset}
-        onUpdate={updatePreset}
-        onDelete={deletePreset}
-      />
     </div>
   )
 }

@@ -57,7 +57,9 @@ class PTYSession:
 
     def write(self, data: str) -> None:
         if not self.proc:
+            print(f"[PTY write] no proc!")
             return
+        print(f"[PTY write] writing {repr(data)}")
         self.proc.write(data)
 
     def read(self, size: int = 4096) -> str:

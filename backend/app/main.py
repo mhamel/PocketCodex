@@ -8,8 +8,10 @@ from fastapi.responses import RedirectResponse
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
+from .api.auth import router as auth_router
 from .api.history import router as history_router
 from .api.presets import router as presets_router
+from .api.slash_commands import router as slash_commands_router
 from .api.terminal import router as terminal_router
 from .api.workspaces import router as workspaces_router
 from .config import STATIC_DIR, VITE_DEV_PORT
@@ -37,23 +39,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth_router)
 app.include_router(terminal_router)
 app.include_router(workspaces_router)
 app.include_router(presets_router)
+app.include_router(slash_commands_router)
 app.include_router(history_router)
 app.include_router(ws_router)
-
-
-@app.get("/mobile")
-@app.get("/mobile/")
-@app.get("/mobile/{path:path}")
-async def mobile_spa_fallback(request: Request, path: str = ""):
-    if VITE_DEV_PORT:
-        host = request.url.hostname or "127.0.0.1"
-        scheme = request.url.scheme
-        suffix = f"/mobile/{path}" if path else "/mobile/"
-        return RedirectResponse(url=f"{scheme}://{host}:{VITE_DEV_PORT}{suffix}", status_code=307)
-    return FileResponse(str(STATIC_DIR / "index.html"))
 
 
 if VITE_DEV_PORT:

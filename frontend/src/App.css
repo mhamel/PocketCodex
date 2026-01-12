@@ -136,7 +136,7 @@
 .terminalWrap {
   background: var(--bg-term);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
+  border-radius: 0;
   overflow: hidden;
   min-height: 0;
 }

@@ -18,6 +18,7 @@ class PTYManager:
         self._session: Optional[PTYSession] = None
         self._session_id: Optional[str] = None
         self._started_at: Optional[float] = None
+        self._cwd: Optional[str] = None
 
         self._output_queue: Queue[str] = Queue(maxsize=OUTPUT_QUEUE_MAXSIZE)
         self._history: Deque[str] = deque()
@@ -64,11 +65,13 @@ class PTYManager:
                 self._session = None
                 self._session_id = None
                 self._started_at = None
+                self._cwd = None
                 self._reader = None
                 raise
 
             self._session_id = str(uuid.uuid4())
             self._started_at = time.time()
+            self._cwd = cwd
 
             self._reader = PTYOutputReader(
                 session=self._session,
@@ -132,6 +135,7 @@ class PTYManager:
                 "uptime_seconds": uptime,
                 "dimensions": dims,
                 "session_id": self._session_id,
+                "cwd": self._cwd,
             }
 
     def shutdown(self) -> None:

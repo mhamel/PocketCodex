@@ -38,6 +38,7 @@ async def terminal_ws(websocket: WebSocket) -> None:
             if msg_type == "input":
                 raw = str(payload.get("data", ""))
                 cleaned = strip_terminal_identity_responses(raw)
+                print(f"[WS input] raw={repr(raw)} cleaned={repr(cleaned)}")
                 if cleaned:
                     pty_manager.write(cleaned)
                 continue

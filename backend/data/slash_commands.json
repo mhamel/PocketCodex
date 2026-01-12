@@ -1,0 +1,55 @@
+{
+  "commands": [
+    {
+      "trigger": "new",
+      "description": "Start a new session (clear and restart terminal)",
+      "send": "/new"
+    },
+    {
+      "trigger": "help",
+      "description": "Show help information",
+      "send": "/help"
+    },
+    {
+      "trigger": "init",
+      "description": "Create an AGENTS.md file with instructions for Codex",
+      "send": "/init"
+    },
+    {
+      "trigger": "compact",
+      "description": "Summarize conversation to prevent hitting the context limit",
+      "send": "/compact"
+    },
+    {
+      "trigger": "diff",
+      "description": "Show git diff (including untracked files)",
+      "send": "/diff"
+    },
+    {
+      "trigger": "mention",
+      "description": "Mention a file",
+      "send": "/mention"
+    },
+    {
+      "trigger": "status",
+      "description": "Show current session configuration and token usage",
+      "send": "/status"
+    },
+    {
+      "trigger": "mcp",
+      "description": "List configured MCP tools",
+      "send": "/mcp"
+    },
+    {
+      "trigger": "logout",
+      "description": "Log out of Codex",
+      "send": "/logout"
+    },
+    {
+      "trigger": "quit",
+      "description": "Exit Codex",
+      "send": "/quit"
+    }
+  ]
+}
+

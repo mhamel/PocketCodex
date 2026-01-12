@@ -17,6 +17,12 @@ export function useWebSocket(onMessage: (msg: WSMessage) => void) {
   const wsRef = useRef<WebSocket | null>(null)
   const reconnectRef = useRef<number | null>(null)
   const backoffRef = useRef<number>(1000)
+  const onMessageRef = useRef(onMessage)
+
+  // Garde le callback à jour sans recréer la connexion
+  useEffect(() => {
+    onMessageRef.current = onMessage
+  }, [onMessage])
 
   const [state, setState] = useState<WebSocketState>('disconnected')
   const url = useMemo(() => getWsUrl(), [])
@@ -60,12 +66,12 @@ export function useWebSocket(onMessage: (msg: WSMessage) => void) {
     ws.onmessage = (event) => {
       try {
         const parsed = JSON.parse(event.data) as WSMessage
-        onMessage(parsed)
+        onMessageRef.current(parsed)
       } catch {
         // ignore
       }
     }
-  }, [onMessage, url])
+  }, [url])
 
   useEffect(() => {
     connect()
