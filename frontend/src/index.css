@@ -6,9 +6,20 @@
   --text-secondary: #00c000;
   --accent-primary: #00ff00;
   --accent-hover: #39ff14;
-  --accent-danger: #00ff00;
+  --accent-danger: #ef4444;
   --accent-success: #00ff00;
   --border-subtle: rgba(0, 255, 0, 0.45);
+
+  --bg-hover: #001400;
+  --bg-active: #002400;
+
+  --radius-sm: 8px;
+  --radius-md: 10px;
+
+  --focus-ring: rgba(0, 255, 0, 0.55);
+  --shadow-elev-1: 0 18px 60px rgba(0, 0, 0, 0.55);
+
+  color-scheme: dark;
 }
 
 * {
@@ -25,10 +36,20 @@ body {
   background: var(--bg-app);
   color: var(--text-primary);
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", "Courier New", monospace;
+  text-rendering: optimizeLegibility;
 }
 
 ::selection {
   background: rgba(0, 255, 0, 0.25);
+}
+
+:where(button, input, select, textarea, a):focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+::placeholder {
+  color: rgba(0, 192, 0, 0.75);
 }
 
 button,

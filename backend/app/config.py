@@ -22,3 +22,4 @@ HISTORY_MAX_CHUNKS = int(os.getenv("HISTORY_MAX_CHUNKS", "2000"))
 
 WORKSPACES_FILE = BASE_DIR / os.getenv("WORKSPACES_FILE", "data/workspaces.json")
 GLOBAL_PRESETS_FILE = BASE_DIR / os.getenv("GLOBAL_PRESETS_FILE", "data/presets/global.json")
+HISTORY_FILE = BASE_DIR / os.getenv("HISTORY_FILE", "data/history.json")

@@ -26,6 +26,47 @@ class StopRequest(BaseModel):
     force: bool = False
 
 
+@router.post("/restart")
+async def restart_terminal(req: StartRequest) -> dict:
+    if req.cwd is not None:
+        from pathlib import Path
+
+        if not is_allowed_path(Path(req.cwd)):
+            raise HTTPException(status_code=400, detail="cwd is not in the allowed workspaces")
+
+    command = req.command or CODEX_COMMAND
+    cols = req.cols or TERMINAL_COLS
+    rows = req.rows or TERMINAL_ROWS
+
+    if pty_manager.is_running():
+        pty_manager.stop(force=True)
+        await ws_manager.broadcast(
+            StatusMessage(
+                type="status",
+                payload=StatusPayload(status="stopped", pid=None, message="Process stopped"),
+            ).model_dump()
+        )
+
+    try:
+        info = pty_manager.start(command=command, args=req.args, cwd=req.cwd, cols=cols, rows=rows)
+    except RuntimeError as e:
+        msg = str(e)
+        if msg == "Session already running":
+            raise HTTPException(status_code=400, detail=msg) from e
+        raise HTTPException(status_code=500, detail=f"Terminal backend error: {msg}") from e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to start session: {e}") from e
+
+    await ws_manager.broadcast(
+        StatusMessage(
+            type="status",
+            payload=StatusPayload(status="running", pid=info.get("pid"), message="Process started"),
+        ).model_dump()
+    )
+
+    return {"success": True, "session_id": info["session_id"], "status": "running", "pid": info.get("pid")}
+
+
 @router.post("/start")
 async def start_terminal(req: StartRequest) -> dict:
     if req.cwd is not None:

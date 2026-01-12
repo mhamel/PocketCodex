@@ -3,14 +3,14 @@
   background: #000000;
   color: var(--text-primary);
   padding: 8px 12px;
-  border-radius: 0;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all 200ms ease-in-out;
 }
 
 .btn:hover {
   border-color: rgba(0, 255, 0, 0.65);
-  background: #001400;
+  background: var(--bg-hover);
 }
 
 .btn:disabled {
@@ -19,22 +19,22 @@
 }
 
 .btnPrimary {
-  background: #001400;
+  background: var(--bg-hover);
   border-color: rgba(0, 255, 0, 0.75);
 }
 
 .btnPrimary:hover {
-  background: #002400;
+  background: var(--bg-active);
 }
 
 .btnDanger {
-  background: var(--accent-primary);
-  border-color: rgba(0, 255, 0, 0.85);
-  color: #000000;
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.65);
+  color: #fecaca;
 }
 
 .btnDanger:hover {
-  background: var(--accent-hover);
+  background: rgba(239, 68, 68, 0.18);
 }
 
 .input {
@@ -42,13 +42,13 @@
   border: 1px solid var(--border-subtle);
   color: var(--text-primary);
   padding: 8px 10px;
-  border-radius: 0;
+  border-radius: var(--radius-sm);
 }
 
 .card {
   background: #000000;
   border: 1px solid var(--border-subtle);
-  border-radius: 0;
+  border-radius: var(--radius-sm);
 }
 
 .small {

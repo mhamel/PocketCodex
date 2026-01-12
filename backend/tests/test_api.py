@@ -36,3 +36,48 @@ def test_stop_terminal(client):
             assert response.status_code == 200
             assert response.json()["status"] == "stopped"
             mock_stop.assert_called_once_with(force=False)
+
+
+def test_restart_terminal_when_stopped(client):
+    with patch("app.api.terminal.is_allowed_path", return_value=True):
+        with patch("app.pty.manager.pty_manager.is_running", return_value=False):
+            with patch("app.pty.manager.pty_manager.stop") as mock_stop:
+                with patch("app.pty.manager.pty_manager.start") as mock_start:
+                    mock_start.return_value = {"session_id": "abc", "pid": 999}
+                    with patch("app.websocket.manager.ws_manager.broadcast", new_callable=MagicMock) as mock_broadcast:
+                        async def async_mock(*args, **kwargs):
+                            return None
+                        mock_broadcast.side_effect = async_mock
+
+                        response = client.post("/api/terminal/restart", json={"cwd": "C:/demo"})
+                        assert response.status_code == 200
+                        data = response.json()
+                        assert data["session_id"] == "abc"
+                        assert data["pid"] == 999
+                        mock_stop.assert_not_called()
+                        mock_start.assert_called_once()
+
+
+def test_restart_terminal_when_running(client):
+    with patch("app.api.terminal.is_allowed_path", return_value=True):
+        with patch("app.pty.manager.pty_manager.is_running", return_value=True):
+            with patch("app.pty.manager.pty_manager.stop") as mock_stop:
+                with patch("app.pty.manager.pty_manager.start") as mock_start:
+                    mock_start.return_value = {"session_id": "abc", "pid": 999}
+                    with patch("app.websocket.manager.ws_manager.broadcast", new_callable=MagicMock) as mock_broadcast:
+                        async def async_mock(*args, **kwargs):
+                            return None
+                        mock_broadcast.side_effect = async_mock
+
+                        response = client.post("/api/terminal/restart", json={"cwd": "C:/demo"})
+                        assert response.status_code == 200
+                        mock_stop.assert_called_once_with(force=True)
+                        mock_start.assert_called_once()
+                        assert mock_broadcast.call_count == 2
+
+
+def test_restart_terminal_rejects_invalid_cwd(client):
+    with patch("app.api.terminal.is_allowed_path", return_value=False):
+        response = client.post("/api/terminal/restart", json={"cwd": "C:/not-allowed"})
+        assert response.status_code == 400
+        assert response.json()["detail"] == "cwd is not in the allowed workspaces"

@@ -8,8 +8,10 @@ import ControlPanel from './components/ControlPanel/ControlPanel'
 import PresetSelector from './components/PresetSelector/PresetSelector'
 import PresetManager from './components/PresetManager/PresetManager'
 import ProjectTree from './components/ProjectTree/ProjectTree'
+import ChatHistoryDrawer from './components/ChatHistory/ChatHistoryDrawer'
 import { apiPost } from './services/api'
 import { usePresets } from './hooks/usePresets'
+import { useChatHistory } from './hooks/useChatHistory'
 import type { PresetScope } from './types/preset'
 
 type ProcessStatus = 'running' | 'stopped' | 'error'
@@ -41,6 +43,9 @@ export default function App() {
   const [projectPath, setProjectPath] = useState<string>('')
   const [cwd, setCwd] = useState<string>('')
   const [managerOpen, setManagerOpen] = useState(false)
+  const [historyOpen, setHistoryOpen] = useState(false)
+
+  const chatHistory = useChatHistory(projectPath.trim() ? projectPath.trim() : null)
 
   const { data: presets, loading: presetsLoading, error: presetsError, createPreset, updatePreset, deletePreset, executePreset } = usePresets(
     projectPath.trim() ? projectPath.trim() : null
@@ -96,6 +101,12 @@ export default function App() {
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && (e.key === 'h' || e.key === 'H')) {
+        e.preventDefault()
+        setHistoryOpen(true)
+        return
+      }
+
       if (!e.ctrlKey) return
 
       const digit = e.key
@@ -113,27 +124,37 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [executePreset, shortcuts])
 
-  const start = useCallback(async () => {
+  const saveCurrentHistorySnapshot = useCallback(async () => {
+    const project = projectPath.trim() ? projectPath.trim() : null
+    const leaf = project ? project.replace(/\\+$/g, '').split(/\\|\//).filter(Boolean).slice(-1)[0] : null
+    const title = leaf ? `Session (${leaf})` : 'Session'
+
+    try {
+      await chatHistory.saveSnapshot(title)
+    } catch (e) {
+      const msg = getErrorMessage(e)
+      if (!msg.toLowerCase().includes('no terminal history')) {
+        setTerminalError(msg)
+      }
+    }
+  }, [chatHistory, projectPath])
+
+  const restart = useCallback(async () => {
     const body: { cwd?: string } = {}
     if (cwd.trim()) body.cwd = cwd.trim()
     setTerminalError(null)
     try {
-      await apiPost('/api/terminal/start', body)
+      await saveCurrentHistorySnapshot()
+      await apiPost('/api/terminal/restart', body)
+      try {
+        termRef.current?.clear()
+      } catch {
+      }
     } catch (e) {
       setTerminalError(getErrorMessage(e))
       setProcessStatus('error')
     }
-  }, [cwd])
-
-  const stop = useCallback(async () => {
-    setTerminalError(null)
-    try {
-      await apiPost('/api/terminal/stop', { force: false })
-    } catch (e) {
-      setTerminalError(getErrorMessage(e))
-      setProcessStatus('error')
-    }
-  }, [])
+  }, [cwd, saveCurrentHistorySnapshot])
 
   const onData = useCallback(
     (data: string) => {
@@ -149,6 +170,14 @@ export default function App() {
     [send]
   )
 
+  const onArrowUp = useCallback(() => {
+    send({ type: 'special_key', payload: { key: 'ArrowUp', modifiers: [] } })
+  }, [send])
+
+  const onArrowDown = useCallback(() => {
+    send({ type: 'special_key', payload: { key: 'ArrowDown', modifiers: [] } })
+  }, [send])
+
   const onTerminalReady = useCallback((term: XTermTerminal) => {
     termRef.current = term
   }, [])
@@ -163,9 +192,16 @@ export default function App() {
           disabled={presetsLoading}
           onExecute={(id: string, scope: PresetScope) => executePreset(id, scope)}
           onManage={() => setManagerOpen(true)}
+          onArrowUp={onArrowUp}
+          onArrowDown={onArrowDown}
+          arrowsDisabled={wsState !== 'connected' || processStatus !== 'running'}
         />
 
         <div className="topbar-spacer" />
+
+        <button className="btn" type="button" onClick={() => setHistoryOpen(true)}>
+          History
+        </button>
 
         <div className="small" style={{ maxWidth: 520, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           Project: {projectPath || '-'}
@@ -194,10 +230,8 @@ export default function App() {
 
           <div className="card footer">
             <ControlPanel
-              canStart={processStatus !== 'running'}
-              canStop={processStatus === 'running'}
-              onStart={start}
-              onStop={stop}
+              canRestart={wsState === 'connected'}
+              onRestart={restart}
             />
 
             <div style={{ display: 'flex', gap: 10 }}>
@@ -219,6 +253,20 @@ export default function App() {
         onCreate={createPreset}
         onUpdate={updatePreset}
         onDelete={deletePreset}
+      />
+
+      <ChatHistoryDrawer
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        items={chatHistory.items}
+        onSaveCurrent={() => void saveCurrentHistorySnapshot()}
+        onRename={(id: string, title: string) => void chatHistory.rename(id, title)}
+        onDelete={(id: string) => void chatHistory.remove(id)}
+        onClearAll={() => {
+          const ok = window.confirm('Clear all history items?')
+          if (!ok) return
+          void chatHistory.clearAll()
+        }}
       />
     </div>
   )
