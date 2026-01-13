@@ -8,8 +8,7 @@ PocketCodex is a lightweight, web-based Integrated Development Environment (IDE)
 ## 🚀 Features
 
 - **Full Terminal Access**: A fully functional, persistent terminal right in your browser (xterm.js).
-- **File System Management**: Navigate, read, and edit files on your host machine effortlessly.
-- **AI-Native Workflow**: Built from the ground up to integrate with LLMs for code generation and assistance.
+- **AI-Native Workflow**: Built from the ground up to integrate seamlessly with **Codex** for intelligent code generation and assistance.
 - **Mobile-First Design**: Optimized touch controls and layout for coding on tablets and phones.
 - **Secure Tunneling**: compatible with Cloudflare Tunnel (or ngrok) for secure remote access.
 - **Workspace Management**: Switch contexts and projects easily.
