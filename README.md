@@ -14,6 +14,11 @@ PocketCodex is a lightweight, web-based Integrated Development Environment (IDE)
 - **Secure Tunneling**: compatible with Cloudflare Tunnel (or ngrok) for secure remote access.
 - **Workspace Management**: Switch contexts and projects easily.
 
+## ⚠️ Current Limitations
+
+- **Operating System**: Currently, only **Windows** is supported.
+- **AI Integration**: AI capabilities are currently powered exclusively by **Codex**.
+
 ## 🛠 Tech Stack
 
 - **Backend**: Python 3.10+, FastAPI, Uvicorn, Websockets.
