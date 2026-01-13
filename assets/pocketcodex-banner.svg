@@ -1,0 +1,45 @@
+<svg width="1200" height="400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1e293b;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="textGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#38bdf8;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#818cf8;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="15" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="400" rx="20" fill="url(#bg)" />
+
+  <!-- Grid Pattern (Subtle) -->
+  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#334155" stroke-width="0.5" opacity="0.3"/>
+  </pattern>
+  <rect width="1200" height="400" fill="url(#grid)" />
+
+  <!-- Abstract Shapes -->
+  <circle cx="1000" cy="100" r="150" fill="#38bdf8" opacity="0.05" filter="url(#glow)" />
+  <circle cx="100" cy="300" r="120" fill="#818cf8" opacity="0.05" filter="url(#glow)" />
+
+  <!-- Logo Icon -->
+  <g transform="translate(180, 140)">
+     <rect x="0" y="0" width="120" height="120" rx="25" fill="none" stroke="url(#textGradient)" stroke-width="6" />
+     <path d="M35 40 L55 60 L35 80" stroke="#f8fafc" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+     <line x1="65" y1="80" x2="85" y2="80" stroke="#f8fafc" stroke-width="8" stroke-linecap="round" />
+  </g>
+
+  <!-- Text -->
+  <text x="340" y="215" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="80" font-weight="bold" fill="#f8fafc">
+    Pocket<tspan fill="url(#textGradient)">Codex</tspan>
+  </text>
+  
+  <text x="345" y="265" font-family="'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="32" fill="#94a3b8" font-weight="300" letter-spacing="1">
+    Your AI-Powered Pocket Dev Environment
+  </text>
+</svg>

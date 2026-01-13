@@ -1,6 +1,6 @@
 # PocketCodex
 
-![PocketCodex Banner](#)  
+![PocketCodex Banner](assets/pocketcodex-banner.svg)  
 *Your AI-Powered Pocket Development Environment*
 
 PocketCodex is a lightweight, web-based Integrated Development Environment (IDE) designed to run on your local machine and be accessed from anywhere—including your mobile device or tablet. It combines a powerful FastAPI backend with a responsive React frontend to give you full control over your terminal, files, and AI-assisted workflows on the go.
