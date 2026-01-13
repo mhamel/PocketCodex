@@ -13,6 +13,13 @@ PocketCodex is a lightweight, web-based Integrated Development Environment (IDE)
 - **Secure Tunneling**: compatible with Cloudflare Tunnel (or ngrok) for secure remote access.
 - **Workspace Management**: Switch contexts and projects easily.
 
+## 📸 Screenshots
+
+<p align="center">
+  <img src="assets/capture-1.png" width="45%" alt="PocketCodex Terminal" />
+  <img src="assets/capture-2.png" width="45%" alt="PocketCodex Mobile View" />
+</p>
+
 ## ⚠️ Current Limitations
 
 - **Operating System**: Currently, only **Windows** is supported.
