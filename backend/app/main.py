@@ -29,7 +29,7 @@ async def lifespan(app: FastAPI):
         await ws_manager.shutdown()
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(lifespan=lifespan, title="PocketCodex")
 
 app.add_middleware(
     CORSMiddleware,
