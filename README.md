@@ -60,6 +60,17 @@ PocketCodex is a lightweight, web-based Integrated Development Environment (IDE)
    npm install
    ```
 
+## 🔐 Configuration & Security
+
+### User Credentials
+Authentication is managed via a simple JSON file located at:
+`backend/data/users.json`
+
+**⚠️ IMPORTANT:**
+- The default credentials are placeholders.
+- **You MUST change the username and password** in this file before deploying or exposing the application.
+- Currently, credentials are stored in plain text (improvements planned).
+
 ## ⚡ Usage
 
 ### Running Locally
