@@ -3,35 +3,34 @@
 ![PocketCodex Banner](assets/pocketcodex-banner-v2.svg)  
 *Your AI-Powered Pocket Development Environment*
 
-PocketCodex is a lightweight, web-based Integrated Development Environment (IDE) designed to run on your local machine and be accessed from anywhere—including your mobile device or tablet. It combines a powerful Node.js backend with a responsive React frontend to give you full control over your terminal, files, and AI-assisted workflows on the go.
+PocketCodex is a lightweight, web-based Integrated Development Environment (IDE) designed to run on your local machine and be accessed from anywhere, including your mobile device or tablet. It combines a powerful Node.js backend with a responsive React frontend to give you full control over your terminal, files, and AI-assisted workflows on the go.
 
-## 🚀 Features
+## Features
 
 - **Full Terminal Access**: A fully functional, persistent terminal right in your browser (xterm.js).
 - **AI-Native Workflow**: Built from the ground up to integrate seamlessly with **Codex** for intelligent code generation and assistance.
 - **Mobile-First Design**: Optimized touch controls and layout for coding on tablets and phones.
-- **Secure Tunneling**: compatible with Cloudflare Tunnel (or ngrok) for secure remote access.
+- **Secure Tunneling**: Compatible with Cloudflare Tunnel (or ngrok) for secure remote access.
 - **Workspace Management**: Switch contexts and projects easily.
 
-## 📸 Screenshots
+## Screenshots
 
 <p align="center">
   <img src="assets/capture-1.png" width="45%" alt="PocketCodex Terminal" />
   <img src="assets/capture-2.png" width="45%" alt="PocketCodex Mobile View" />
 </p>
 
-## ⚠️ Current Limitations
+## Current Limitations
 
-- **Operating System**: Currently, only **Windows** is supported.
 - **AI Integration**: AI capabilities are currently powered exclusively by **Codex**.
 
-## 🛠 Tech Stack
+## Tech Stack
 
 - **Backend**: Node.js 18+, Express.js, TypeScript, node-pty, WebSocket.
 - **Frontend**: React 18, Vite, TypeScript, TailwindCSS (styled components), xterm.js.
 - **Communication**: WebSocket for real-time terminal streaming and state synchronization.
 
-## 🏁 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -61,31 +60,32 @@ PocketCodex is a lightweight, web-based Integrated Development Environment (IDE)
    npm install
    ```
 
-## 🔐 Configuration & Security
+## Configuration & Security
 
 ### User Credentials
-Authentication is managed via a simple JSON file located at:
+
+Authentication is managed via a simple JSON file located at:  
 `backend-node/data/users.json`
 
-**⚠️ IMPORTANT:**
+**IMPORTANT:**
 - The default credentials are placeholders.
 - Default credentials: `A` / `C@dex` (change these before exposing the app).
 - **You MUST change the username and password** in this file before deploying or exposing the application.
 - Currently, credentials are stored in plain text (improvements planned).
 
-## ⚡ Usage
+## Usage
 
 ### Running Locally
 
 You need to run both the backend and frontend servers.
 
-**1. Start the Backend API** (Port 8000 by default)
+**1. Start the Backend API** (Port 8000 by default)  
 From the `backend-node` directory:
 ```bash
 npm run dev
 ```
 
-**2. Start the Frontend Dev Server**
+**2. Start the Frontend Dev Server**  
 From the `frontend` directory:
 ```bash
 npm run dev
@@ -101,7 +101,7 @@ cloudflared tunnel --url http://localhost:8000
 ```
 *Note: Ensure your frontend is configured to build/proxy correctly to the backend port if serving purely static files, or use the dev server's network exposure options.*
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
@@ -111,6 +111,6 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## 📄 License
+## License
 
 Distributed under the MIT License. See `LICENSE` for more information.
