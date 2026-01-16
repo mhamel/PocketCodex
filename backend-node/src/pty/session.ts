@@ -1,5 +1,38 @@
 import * as pty from 'node-pty';
 import { spawn } from 'child_process';
+import fs from 'node:fs';
+import path from 'node:path';
+
+function resolveCommand(command: string): string | null {
+  const looksLikePath = command.includes('/') || command.includes('\\');
+  if (looksLikePath) {
+    return fs.existsSync(command) ? command : null;
+  }
+
+  const pathEnv = process.env.PATH || '';
+  const pathDirs = pathEnv.split(path.delimiter).filter(Boolean);
+
+  const isWin = process.platform === 'win32';
+  const hasExt = path.extname(command).length > 0;
+
+  const candidates = isWin
+    ? hasExt
+      ? [command]
+      : (process.env.PATHEXT || '.EXE;.CMD;.BAT;.COM')
+          .split(';')
+          .filter(Boolean)
+          .map((ext) => `${command}${ext.toLowerCase()}`)
+    : [command];
+
+  for (const dir of pathDirs) {
+    for (const candidate of candidates) {
+      const fullPath = path.join(dir, candidate);
+      if (fs.existsSync(fullPath)) return fullPath;
+    }
+  }
+
+  return null;
+}
 
 export interface PTYDimensions {
   cols: number;
@@ -43,13 +76,34 @@ export class PTYSession {
   }
 
   start(): void {
-    this.proc = pty.spawn(this.command, this.args, {
-      name: 'xterm-256color',
-      cols: this.dimensions.cols,
-      rows: this.dimensions.rows,
-      cwd: this.cwd || process.cwd(),
-      env: process.env as { [key: string]: string },
-    });
+    const resolvedCommand = resolveCommand(this.command);
+    if (!resolvedCommand) {
+      throw new Error(
+        `Command not found: ${this.command}. Ensure it is on PATH or set an absolute path via CODEX_COMMAND.`,
+      );
+    }
+
+    const isWin = process.platform === 'win32';
+    const ext = path.extname(resolvedCommand).toLowerCase();
+    const shouldWrapInCmd = isWin && (ext === '.cmd' || ext === '.bat');
+
+    const spawnCommand = shouldWrapInCmd ? process.env.ComSpec || 'cmd.exe' : resolvedCommand;
+    const spawnArgs = shouldWrapInCmd
+      ? ['/d', '/s', '/c', resolvedCommand, ...this.args]
+      : this.args;
+
+    try {
+      this.proc = pty.spawn(spawnCommand, spawnArgs, {
+        name: 'xterm-256color',
+        cols: this.dimensions.cols,
+        rows: this.dimensions.rows,
+        cwd: this.cwd || process.cwd(),
+        env: process.env as { [key: string]: string },
+      });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      throw new Error(`Cannot create process: ${msg}`);
+    }
 
     this.pid = this.proc.pid;
 

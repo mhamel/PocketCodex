@@ -37,6 +37,7 @@ PocketCodex is a lightweight, web-based Integrated Development Environment (IDE)
 
 - **Node.js**: Version 18 or higher (using `npm`).
 - **Git**: For version control.
+- **Codex CLI**: `codex` must be available on your `PATH` (or set `CODEX_COMMAND` to an absolute path like `C:\path\to\codex.cmd`).
 
 ### Installation
 
@@ -68,6 +69,7 @@ Authentication is managed via a simple JSON file located at:
 
 **⚠️ IMPORTANT:**
 - The default credentials are placeholders.
+- Default credentials: `A` / `C@dex` (change these before exposing the app).
 - **You MUST change the username and password** in this file before deploying or exposing the application.
 - Currently, credentials are stored in plain text (improvements planned).
 
