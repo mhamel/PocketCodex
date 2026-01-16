@@ -11,9 +11,9 @@ export default defineConfig({
       clientPort: 443
     },
     proxy: {
-      '/api': 'http://localhost:8000',
+      '/api': 'http://localhost:9998',
       '/ws': {
-        target: 'ws://localhost:8000',
+        target: 'ws://localhost:9998',
         ws: true
       }
     }

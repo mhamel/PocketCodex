@@ -79,7 +79,7 @@ Authentication is managed via a simple JSON file located at:
 
 You need to run both the backend and frontend servers.
 
-**1. Start the Backend API** (Port 8000 by default)  
+**1. Start the Backend API** (Port 9998 by default)  
 From the `backend-node` directory:
 ```bash
 npm run dev
@@ -92,12 +92,20 @@ npm run dev
 ```
 Access the application at `http://localhost:9999`.
 
+### Production (Single Port)
+
+In production, you can serve the built frontend directly from the backend so **everything is available on one port**.
+
+```powershell
+.\scripts\start_pocketcodex.ps1 -Mode prod -SkipInstall
+```
+
 ### Remote Access (Optional)
 
 To access PocketCodex from your mobile device, we recommend using a secure tunnel like Cloudflare Tunnel.
 
 ```bash
-cloudflared tunnel --url http://localhost:8000
+cloudflared tunnel --url http://localhost:9998
 ```
 *Note: Ensure your frontend is configured to build/proxy correctly to the backend port if serving purely static files, or use the dev server's network exposure options.*
 

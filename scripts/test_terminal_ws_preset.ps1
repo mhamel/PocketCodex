@@ -1,6 +1,6 @@
 param(
-  [string]$BaseUrl = 'http://127.0.0.1:8000',
-  [string]$WsUrl = 'ws://127.0.0.1:8000/ws/terminal'
+  [string]$BaseUrl = 'http://127.0.0.1:9998',
+  [string]$WsUrl = 'ws://127.0.0.1:9998/ws/terminal'
 )
 
 $ErrorActionPreference = 'Stop'

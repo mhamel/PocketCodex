@@ -11,7 +11,7 @@ export const BASE_DIR = path.resolve(__dirname, '..');
 export const DATA_DIR = path.join(BASE_DIR, 'data');
 export const STATIC_DIR = path.join(BASE_DIR, 'static');
 
-export const PORT = parseInt(process.env.PORT || '8000', 10);
+export const PORT = parseInt(process.env.PORT || '9998', 10);
 export const VITE_DEV_PORT = parseInt(process.env.VITE_DEV_PORT || '0', 10);
 
 export const CODEX_COMMAND = process.env.CODEX_COMMAND || 'codex';
