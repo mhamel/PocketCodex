@@ -54,7 +54,7 @@ Web application to interact with Codex CLI (OpenAI) through a browser-based term
 +-------------------------|--------------------------------------+
 |                         v                                      |
 |  +----------------------------------------------------------+  |
-|  |              FastAPI Backend Server                       |  |
+|  |              Express.js Backend Server                    |  |
 |  |  +----------------------+  +---------------------------+  |  |
 |  |  | REST API Endpoints   |  | WebSocket Handler         |  |  |
 |  |  | - POST /api/terminal/start  |  - /ws/terminal        |  |  |
@@ -71,7 +71,7 @@ Web application to interact with Codex CLI (OpenAI) through a browser-based term
 |  +---------------------------|--------------------------------+  |
 +------------------------------|------------------------------------+
                                |
-                               | ConPTY Interface (pywinpty)
+                               | ConPTY Interface (node-pty)
                                |
 +------------------------------v------------------------------------+
 |                      Windows ConPTY                                |
@@ -88,15 +88,15 @@ Web application to interact with Codex CLI (OpenAI) through a browser-based term
 
 ## Tech Stack
 
-### Backend (Python)
+### Backend (Node.js/TypeScript)
 
 | Library | Version | Role |
 |---------|---------|------|
-| fastapi | >=0.115.0 | Async web framework with native WebSocket support |
-| uvicorn | >=0.32.0 | ASGI server for FastAPI |
-| pywinpty | >=2.0.0 | Python interface to Windows ConPTY |
-| pydantic | >=2.0.0 | Data validation and serialization |
-| python-dotenv | >=1.0.0 | Environment configuration management |
+| express | ^4.21.0 | Web framework with middleware support |
+| ws | ^8.18.0 | WebSocket server implementation |
+| node-pty | ^1.0.0 | PTY interface (Microsoft's library, used by VS Code) |
+| typescript | ^5.6.0 | TypeScript compiler |
+| dotenv | ^16.4.0 | Environment configuration management |
 
 ### Frontend (React/TypeScript)
 

@@ -44,6 +44,7 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
   const termRef = useRef<XTermTerminal | null>(null)
   const terminalHandleRef = useRef<TerminalHandle | null>(null)
   const restartInFlightRef = useRef(false)
+  const cmdInputRef = useRef<HTMLInputElement | null>(null)
 
   const [projectPickerOpen, setProjectPickerOpen] = useState(false)
 
@@ -52,6 +53,7 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
   const [terminalError, setTerminalError] = useState<string | null>(null)
 
   const [projectPath, setProjectPath] = useState<string>('')
+  const [cmdValue, setCmdValue] = useState('')
 
   const onWsMessage = useCallback(
     (msg: WSMessage) => {
@@ -139,7 +141,7 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
 
       try {
         termRef.current?.reset()
-      } catch {}
+      } catch { }
 
       try {
         const body = { cwd: path }
@@ -173,6 +175,19 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
     send({ type: 'input', payload: { data: '\r' } })
   }, [send])
 
+  const submitCommand = useCallback(() => {
+    if (!cmdValue.trim()) return false
+    onData(cmdValue + '\r')
+    setCmdValue('')
+    cmdInputRef.current?.focus()
+    return true
+  }, [cmdValue, onData])
+
+  const handleEnterClick = useCallback(() => {
+    if (submitCommand()) return
+    sendEnter()
+  }, [sendEnter, submitCommand])
+
   const sendEscape = useCallback(() => {
     send({ type: 'input', payload: { data: '\x1b' } })
   }, [send])
@@ -202,12 +217,12 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
     }
   }, [])
 
-  const mobileContentStyle: CSSProperties | undefined = keyboardOffset
-    ? { paddingBottom: `calc(env(safe-area-inset-bottom) + 72px + ${keyboardOffset}px)` }
-    : undefined
+  const mobileAppStyle = useMemo(() => {
+    return { ['--mobile-kbd-offset' as any]: `${keyboardOffset}px` } as CSSProperties
+  }, [keyboardOffset])
 
   return (
-    <div className="mobileApp">
+    <div className="mobileApp" style={mobileAppStyle}>
       <div className="mobileTopbar">
         <button
           type="button"
@@ -226,9 +241,9 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
           title="Logout"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-            <polyline points="16 17 21 12 16 7"/>
-            <line x1="21" y1="12" x2="9" y2="12"/>
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" y1="12" x2="9" y2="12" />
           </svg>
         </button>
       </div>
@@ -239,17 +254,40 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
         </div>
       ) : null}
 
-      <div className="mobileContent" style={mobileContentStyle}>
+      <div className="mobileContent">
         <div className="terminalWrap mobileCard mobileTerminalWrap" id="mobile-terminal-host">
           <TerminalView ref={terminalHandleRef} onData={onData} onResize={onResize} onTerminalReady={onTerminalReady} autoFocus={true} />
         </div>
       </div>
 
-      <div className="mobileNavArrows" style={{ bottom: keyboardOffset }}>
+      <div className="mobileInputBar">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            submitCommand()
+          }}
+          className="mobileInputForm"
+        >
+          <input
+            type="text"
+            name="cmd"
+            className="mobileInput"
+            placeholder="Type command..."
+            autoComplete="off"
+            autoCapitalize="none"
+            enterKeyHint="send"
+            ref={cmdInputRef}
+            value={cmdValue}
+            onChange={(e) => setCmdValue(e.target.value)}
+          />
+        </form>
+      </div>
+
+      <div className="mobileNavArrows">
         <button type="button" className="mobileNavArrowBtn" onClick={handleRefresh} aria-label="Refresh">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="23 4 23 10 17 10"/>
-            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            <polyline points="23 4 23 10 17 10" />
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
           </svg>
         </button>
         <button type="button" className="mobileNavArrowBtn" onClick={sendEscape} aria-label="Escape">
@@ -257,18 +295,18 @@ function MainApp({ onLogout }: { onLogout: () => void }) {
         </button>
         <button type="button" className="mobileNavArrowBtn" onClick={sendArrowUp} aria-label="Arrow up">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M18 15l-6-6-6 6"/>
+            <path d="M18 15l-6-6-6 6" />
           </svg>
         </button>
         <button type="button" className="mobileNavArrowBtn" onClick={sendArrowDown} aria-label="Arrow down">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M6 9l6 6 6-6"/>
+            <path d="M6 9l6 6 6-6" />
           </svg>
         </button>
-        <button type="button" className="mobileNavArrowBtn" onClick={sendEnter} aria-label="Enter">
+        <button type="button" className="mobileNavArrowBtn" onClick={handleEnterClick} aria-label="Enter">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M9 10l-5 5 5 5"/>
-            <path d="M20 4v7a4 4 0 0 1-4 4H4"/>
+            <path d="M9 10l-5 5 5 5" />
+            <path d="M20 4v7a4 4 0 0 1-4 4H4" />
           </svg>
         </button>
       </div>

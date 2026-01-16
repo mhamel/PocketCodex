@@ -1,4 +1,8 @@
 .mobileApp {
+  --mobile-kbd-offset: 0px;
+  --mobile-nav-space: calc(60px + env(safe-area-inset-bottom));
+  --mobile-input-space: 56px;
+  --mobile-dock-space: calc(var(--mobile-nav-space) + var(--mobile-input-space));
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -59,7 +63,7 @@
   display: flex;
   flex-direction: column;
   padding: 10px;
-  padding-bottom: calc(env(safe-area-inset-bottom) + 72px);
+  padding-bottom: calc(var(--mobile-dock-space) + var(--mobile-kbd-offset));
   position: relative;
 }
 
@@ -151,7 +155,7 @@
 
 .mobileNavArrows {
   position: fixed;
-  bottom: 0;
+  bottom: var(--mobile-kbd-offset);
   left: 0;
   right: 0;
   display: flex;
@@ -186,4 +190,60 @@
 .mobileNavArrowBtn:active {
   background: var(--bg-active);
   border-color: var(--accent);
+}
+
+/* New Mobile Input Styles */
+.mobileInputBar {
+  position: fixed;
+  bottom: calc(var(--mobile-kbd-offset) + var(--mobile-nav-space));
+  left: 0;
+  right: 0;
+  padding: 8px 12px;
+  background: var(--bg-panel);
+  border-top: 1px solid var(--border-subtle);
+  z-index: 45;
+  display: flex;
+  justify-content: center;
+}
+
+.mobileInputForm {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  max-width: 600px;
+}
+
+.mobileInput {
+  flex: 1;
+  background: #000000;
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  padding: 0 16px;
+  height: 40px;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 16px;
+  outline: none;
+}
+
+.mobileInput:focus {
+  border-color: var(--accent);
+}
+
+.mobileInputSendBtn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: none;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.mobileInputSendBtn:active {
+  opacity: 0.9;
 }

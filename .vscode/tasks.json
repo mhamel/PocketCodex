@@ -2,11 +2,11 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Backend (FastAPI)",
+      "label": "Backend (Node)",
       "type": "shell",
-      "command": "python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000",
+      "command": "npm run dev",
       "options": {
-        "cwd": "${workspaceFolder}/backend"
+        "cwd": "${workspaceFolder}/backend-node"
       },
       "presentation": {
         "reveal": "always",
@@ -32,7 +32,7 @@
     {
       "label": "START ALL (Dev)",
       "dependsOn": [
-        "Backend (FastAPI)",
+        "Backend (Node)",
         "Frontend (Vite)"
       ],
       "dependsOrder": "parallel",

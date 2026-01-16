@@ -3,7 +3,7 @@
 ![PocketCodex Banner](assets/pocketcodex-banner-v2.svg)  
 *Your AI-Powered Pocket Development Environment*
 
-PocketCodex is a lightweight, web-based Integrated Development Environment (IDE) designed to run on your local machine and be accessed from anywhere—including your mobile device or tablet. It combines a powerful FastAPI backend with a responsive React frontend to give you full control over your terminal, files, and AI-assisted workflows on the go.
+PocketCodex is a lightweight, web-based Integrated Development Environment (IDE) designed to run on your local machine and be accessed from anywhere—including your mobile device or tablet. It combines a powerful Node.js backend with a responsive React frontend to give you full control over your terminal, files, and AI-assisted workflows on the go.
 
 ## 🚀 Features
 
@@ -27,7 +27,7 @@ PocketCodex is a lightweight, web-based Integrated Development Environment (IDE)
 
 ## 🛠 Tech Stack
 
-- **Backend**: Python 3.10+, FastAPI, Uvicorn, Websockets.
+- **Backend**: Node.js 18+, Express.js, TypeScript, node-pty, WebSocket.
 - **Frontend**: React 18, Vite, TypeScript, TailwindCSS (styled components), xterm.js.
 - **Communication**: WebSocket for real-time terminal streaming and state synchronization.
 
@@ -35,7 +35,6 @@ PocketCodex is a lightweight, web-based Integrated Development Environment (IDE)
 
 ### Prerequisites
 
-- **Python**: Version 3.10 or higher.
 - **Node.js**: Version 18 or higher (using `npm`).
 - **Git**: For version control.
 
@@ -48,16 +47,10 @@ PocketCodex is a lightweight, web-based Integrated Development Environment (IDE)
    ```
 
 2. **Backend Setup**
-   Navigate to the backend directory and set up the virtual environment:
+   Navigate to the backend directory and install dependencies:
    ```bash
-   cd backend
-   python -m venv venv
-   # Windows:
-   .\venv\Scripts\activate
-   # Linux/Mac:
-   source venv/bin/activate
-   
-   pip install -r requirements.txt
+   cd backend-node
+   npm install
    ```
 
 3. **Frontend Setup**
@@ -71,7 +64,7 @@ PocketCodex is a lightweight, web-based Integrated Development Environment (IDE)
 
 ### User Credentials
 Authentication is managed via a simple JSON file located at:
-`backend/data/users.json`
+`backend-node/data/users.json`
 
 **⚠️ IMPORTANT:**
 - The default credentials are placeholders.
@@ -84,12 +77,10 @@ Authentication is managed via a simple JSON file located at:
 
 You need to run both the backend and frontend servers.
 
-**1. Start the Backend API** (Port 9999 by default)
-From the `backend` directory:
+**1. Start the Backend API** (Port 8000 by default)
+From the `backend-node` directory:
 ```bash
-python run.py
-# Or directly with uvicorn:
-uvicorn app.main:app --host 0.0.0.0 --port 9999 --reload
+npm run dev
 ```
 
 **2. Start the Frontend Dev Server**
@@ -97,14 +88,14 @@ From the `frontend` directory:
 ```bash
 npm run dev
 ```
-Access the application at `http://localhost:5173`.
+Access the application at `http://localhost:9999`.
 
 ### Remote Access (Optional)
 
 To access PocketCodex from your mobile device, we recommend using a secure tunnel like Cloudflare Tunnel.
 
 ```bash
-cloudflared tunnel --url http://localhost:9999
+cloudflared tunnel --url http://localhost:8000
 ```
 *Note: Ensure your frontend is configured to build/proxy correctly to the backend port if serving purely static files, or use the dev server's network exposure options.*
 
